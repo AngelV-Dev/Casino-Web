@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Wallet extends Model
+class UserProfile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'balance',
-        'currency',
+        'avatar',
+        'title',
+        'background_color',
     ];
 
     /**
-     * Relación inversa con User
+     * Relación con User
      */
     public function user()
     {
