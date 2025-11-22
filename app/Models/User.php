@@ -161,19 +161,22 @@ class User extends Authenticatable
     /**
      * Verificar si el usuario tiene un permiso
      */
-    public function can($permission)
+    /**
+     * Verificar si el usuario tiene un permiso (custom)
+     */
+    public function hasPermission($permission)
     {
         $permissions = self::getRolePermissions()[$this->role] ?? [];
         return in_array($permission, $permissions);
     }
 
     /**
-     * Verificar si tiene alguno de los permisos
+     * Verificar si tiene alguno de los permisos (custom)
      */
-    public function canAny(array $permissions)
+    public function hasAnyPermission(array $permissions)
     {
         foreach ($permissions as $permission) {
-            if ($this->can($permission)) {
+            if ($this->hasPermission($permission)) {
                 return true;
             }
         }
@@ -181,17 +184,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si tiene todos los permisos
+     * Verificar si tiene todos los permisos (custom)
      */
-    public function canAll(array $permissions)
+    public function hasAllPermissions(array $permissions)
     {
         foreach ($permissions as $permission) {
-            if (!$this->can($permission)) {
+            if (!$this->hasPermission($permission)) {
                 return false;
             }
         }
         return true;
     }
+
 
     /**
      * Verificar si puede modificar a otro usuario
@@ -301,5 +305,25 @@ class User extends Authenticatable
             'suspended_at' => null,
         ]);
     }
-}
 
+    // ==================== AVATAR ====================
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar
+            ? asset('avatars/' . $this->avatar)
+            : asset('avatars/default.png');
+    }
+
+    // =================== FRIENDS ===================
+    public function friends()
+    {
+        return $this->hasMany(Friend::class, 'user_id');
+    }
+
+    public function friendOf()
+    {
+        return $this->hasMany(Friend::class, 'friend_id');
+    }
+
+}

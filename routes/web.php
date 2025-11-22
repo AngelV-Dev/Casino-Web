@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
+use App\Http\Controllers\AvatarController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -57,18 +58,26 @@ Route::middleware(['auth', 'permission:manage_users'])->group(function () {
     Route::post('/users', [UserManagementController::class, 'store']);
 });
 
-
 // Dashboard privado para usuarios logueados
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Perfil de usuario
+// ========== PERFIL DE USUARIO ==========
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Ver perfil
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    // Editar perfil
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Guardar avatar elegido
+    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
+        ->name('profile.select-avatar');
 });
 
 // Rutas de autenticación de Breeze
 require __DIR__.'/auth.php';
+
