@@ -93,15 +93,15 @@ const submit = () => {
                         Login
                     </Link>
                 </div>
+
             </form>
         </div>
 
-        <!-- RIGHT SIDE WITH IMAGE -->
+        <!-- RIGHT IMAGE -->
         <div class="w-1/2 relative flex items-center justify-center overflow-hidden">
-
             <img src="/images/derecha.png" class="absolute inset-0 w-full h-full object-cover" />
-
             <div class="absolute inset-0 bg-black/40"></div>
         </div>
+
     </div>
 </template>
