@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -55,7 +56,7 @@ Route::middleware(['auth', 'role:support,moderator,admin,super_admin'])->prefix(
 
 // ========== EJEMPLO CON PERMISOS ESPECÍFICOS ==========
 Route::middleware(['auth', 'permission:manage_users'])->group(function () {
-    Route::post('/users', [UserManagementController::class, 'store']);
+Route::post('/users', [UserManagementController::class, 'store']);
 });
 
 // Dashboard privado para usuarios logueados
@@ -65,17 +66,25 @@ Route::get('/dashboard', function () {
 
 // ========== PERFIL DE USUARIO ==========
 Route::middleware('auth')->group(function () {
-    // Ver perfil
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-    // Editar perfil
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// Ver perfil
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-    // Guardar avatar elegido
-    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
-        ->name('profile.select-avatar');
+// Editar perfil
+Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+// Guardar avatar elegido
+Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
+    ->name('profile.select-avatar');
+});
+
+// Wallet
+Route::middleware(['auth'])->group(function () {
+    Route::get('/wallet', [WalletController::class, 'show'])->name('wallet.show');
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw'])->name('wallet.withdraw');
 });
 
 // Rutas de autenticación de Breeze

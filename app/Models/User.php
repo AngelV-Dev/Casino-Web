@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Transaction;
+use App\Models\GameSession;
+use App\Models\Wallet;
 
 class User extends Authenticatable
 {
@@ -89,23 +92,34 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class);
     }
 
+    /**
+     * Transacciones
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Sesiones de juego
+     */
+    public function gameSessions()
+    {
+        return $this->hasMany(GameSession::class);
+    }
 
     // ==================== SISTEMA DE PERMISOS ====================
     
-    /**
-     * Permisos definidos por rol
-     */
     public static function getRolePermissions()
     {
         return [
             'super_admin' => [
-                // Control total del sistema
-                'manage_admins',           // Crear/eliminar otros admins
-                'manage_moderators',       // Crear/eliminar moderadores
-                'manage_support',          // Crear/eliminar soporte
-                'manage_users',            // CRUD de usuarios normales
-                'change_any_role',         // Cambiar rol de cualquiera
-                'delete_any_admin',        // Eliminar otros admins
+                'manage_admins',
+                'manage_moderators',
+                'manage_support',
+                'manage_users',
+                'change_any_role',
+                'delete_any_admin',
                 'suspend_users',
                 'ban_users',
                 'view_all_tickets',
@@ -116,11 +130,10 @@ class User extends Authenticatable
             ],
             
             'admin' => [
-                // Administración limitada (NO puede tocar super_admin ni otros admins)
-                'manage_moderators',       // Puede crear moderadores
-                'manage_support',          // Puede crear soporte
-                'manage_users',            // CRUD de usuarios normales
-                'change_user_role',        // Solo cambiar rol de users (no admins)
+                'manage_moderators',
+                'manage_support',
+                'manage_users',
+                'change_user_role',
                 'suspend_users',
                 'ban_users',
                 'view_all_tickets',
@@ -130,25 +143,22 @@ class User extends Authenticatable
             ],
             
             'moderator' => [
-                // Moderación de usuarios y contenido
-                'view_users',              // Ver lista de usuarios
-                'suspend_users',           // Suspender usuarios (NO banear)
-                'view_user_details',       // Ver detalles de usuarios
-                'view_tickets',            // Ver tickets
-                'respond_tickets',         // Responder tickets
-                'view_reports',            // Ver reportes limitados
+                'view_users',
+                'suspend_users',
+                'view_user_details',
+                'view_tickets',
+                'respond_tickets',
+                'view_reports',
             ],
             
             'support' => [
-                // Solo soporte técnico
-                'view_tickets',            // Ver tickets asignados
-                'respond_tickets',         // Responder tickets
-                'close_tickets',           // Cerrar tickets
-                'view_user_details',       // Ver info básica de usuarios
+                'view_tickets',
+                'respond_tickets',
+                'close_tickets',
+                'view_user_details',
             ],
             
             'user' => [
-                // Usuario normal
                 'play_games',
                 'create_tickets',
                 'update_profile',
@@ -158,21 +168,12 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Verificar si el usuario tiene un permiso
-     */
-    /**
-     * Verificar si el usuario tiene un permiso (custom)
-     */
     public function hasPermission($permission)
     {
         $permissions = self::getRolePermissions()[$this->role] ?? [];
         return in_array($permission, $permissions);
     }
 
-    /**
-     * Verificar si tiene alguno de los permisos (custom)
-     */
     public function hasAnyPermission(array $permissions)
     {
         foreach ($permissions as $permission) {
@@ -183,9 +184,6 @@ class User extends Authenticatable
         return false;
     }
 
-    /**
-     * Verificar si tiene todos los permisos (custom)
-     */
     public function hasAllPermissions(array $permissions)
     {
         foreach ($permissions as $permission) {
@@ -196,24 +194,16 @@ class User extends Authenticatable
         return true;
     }
 
-
-    /**
-     * Verificar si puede modificar a otro usuario
-     */
     public function canModify(User $targetUser)
     {
-        // Super admin puede modificar a todos (excepto a sí mismo en algunas acciones)
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        // Admin puede modificar a moderators, support y users (NO a admins ni super_admins)
         if ($this->isAdmin()) {
             return in_array($targetUser->role, ['moderator', 'support', 'user']);
         }
 
-        // Moderador NO puede modificar a nadie directamente
-        // Solo puede suspender (con permiso específico)
         if ($this->isModerator()) {
             return $targetUser->isUser() && $this->can('suspend_users');
         }
@@ -221,17 +211,12 @@ class User extends Authenticatable
         return false;
     }
 
-    /**
-     * Verificar si puede cambiar el rol de otro usuario
-     */
     public function canChangeRoleTo(User $targetUser, $newRole)
     {
-        // Solo super_admin puede cambiar roles a admin o super_admin
         if (in_array($newRole, ['super_admin', 'admin'])) {
             return $this->isSuperAdmin();
         }
 
-        // Admin puede asignar moderator o support
         if (in_array($newRole, ['moderator', 'support', 'user'])) {
             return $this->isAdmin() || $this->isSuperAdmin();
         }
@@ -239,22 +224,16 @@ class User extends Authenticatable
         return false;
     }
 
-    /**
-     * Verificar si puede eliminar a otro usuario
-     */
     public function canDelete(User $targetUser)
     {
-        // Nadie puede eliminarse a sí mismo
         if ($this->id === $targetUser->id) {
             return false;
         }
 
-        // Super admin puede eliminar a todos excepto otros super_admins
         if ($this->isSuperAdmin()) {
             return !$targetUser->isSuperAdmin();
         }
 
-        // Admin solo puede eliminar users, moderators y support
         if ($this->isAdmin()) {
             return in_array($targetUser->role, ['user', 'moderator', 'support']);
         }
@@ -325,5 +304,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Friend::class, 'friend_id');
     }
-
 }
