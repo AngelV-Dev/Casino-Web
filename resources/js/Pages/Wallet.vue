@@ -1,12 +1,24 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import axios from 'axios'
+import { router } from '@inertiajs/vue3'
 
-// Estos valores vendrán del backend más adelante
-const balance = ref(1.06)
+/* === RECIBIR DATA REAL DESDE LARAVEL === */
+const props = defineProps({
+    balance: Number
+})
+
+/* convertimos balance a ref para poder editarlo */
+const balance = ref(Number(props.balance))
 const casinoBalance = ref(0.00)
 const sportsBalance = ref(0.00)
 const bonusBalance = ref(0.00)
 
+/* inputs */
+const depositAmount = ref('')
+const withdrawAmount = ref('')
+
+/* métodos de pago */
 const paymentMethods = [
   { name: 'PAGOEFECTIVOQR', min: 5, max: 500, image: 'pagoefectivoqr.png' },
   { name: 'NIUBIZ_YAPE', min: 10, max: 500, image: 'niubiz_yape.png' },
@@ -14,23 +26,56 @@ const paymentMethods = [
   { name: 'TUPAY', min: 20, max: 20000, image: 'tupay.png' }
 ]
 
-const depositAmount = ref('')
-const withdrawAmount = ref('')
+/* === LLAMADAS REALES AL BACKEND === */
 
-// Simulación
-const deposit = () => {
-  balance.value += Number(depositAmount.value)
-  depositAmount.value = ''
+/* DEPÓSITO REAL */
+const deposit = async () => {
+    if (!depositAmount.value || depositAmount.value <= 0) {
+        alert("Monto inválido")
+        return
+    }
+
+    try {
+        const res = await axios.post('/wallet/deposit', {
+            amount: depositAmount.value
+        })
+
+        if (res.data.success) {
+            balance.value = Number(res.data.balance)
+            depositAmount.value = ''
+        } else {
+            alert(res.data.message)
+        }
+
+    } catch (e) {
+        alert(e.response.data.message)
+    }
 }
 
-const withdraw = () => {
-  if (withdrawAmount.value <= balance.value) {
-    balance.value -= Number(withdrawAmount.value)
-    withdrawAmount.value = ''
-  } else {
-    alert('Saldo insuficiente')
-  }
+/* RETIRO REAL */
+const withdraw = async () => {
+    if (!withdrawAmount.value || withdrawAmount.value <= 0) {
+        alert("Monto inválido")
+        return
+    }
+
+    try {
+        const res = await axios.post('/wallet/withdraw', {
+            amount: withdrawAmount.value
+        })
+
+        if (res.data.success) {
+            balance.value = Number(res.data.balance)
+            withdrawAmount.value = ''
+        } else {
+            alert(res.data.message)
+        }
+
+    } catch (e) {
+        alert(e.response.data.message)
+    }
 }
+
 </script>
 
 <template>

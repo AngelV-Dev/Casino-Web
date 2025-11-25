@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\CrashController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -82,55 +83,53 @@ Route::middleware(['auth', 'role:support,moderator,admin,super_admin'])->prefix(
     Route::put('/tickets/{ticket}/close', [TicketController::class, 'close']);  // Cerrar ticket resuelto
 });
 
-// Ejemplo: Ruta protegida por un permiso específico ("manage_users")
+// ========== EJEMPLO CON PERMISOS ESPECÍFICOS ==========
 Route::middleware(['auth', 'permission:manage_users'])->group(function () {
     Route::post('/users', [UserManagementController::class, 'store']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| ZONA DE USUARIO (Frontend Privado)
-|--------------------------------------------------------------------------
-| Rutas para usuarios logueados (Jugadores).
-*/
-
-// Dashboard Principal
+// Dashboard privado para usuarios logueados
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-
-// GRUPO: PERFIL DE USUARIO
+// ========== PERFIL DE USUARIO ==========
 Route::middleware('auth')->group(function () {
-    // Visualización del perfil público/privado
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-    // Edición y Configuración
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');       // Formulario
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');     // Guardar cambios
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');  // Eliminar cuenta
+// Ver perfil
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-    // Selección de Avatar (AJAX/Form)
-    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
-        ->name('profile.select-avatar');
+// Editar perfil
+Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+// Guardar avatar elegido
+Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
+    ->name('profile.select-avatar');
 });
 
-// GRUPO: BILLETERA Y ECONOMÍA (Wallet)
+// Wallet
 Route::middleware(['auth'])->group(function () {
     Route::get('/wallet', [WalletController::class, 'show'])->name('wallet.show');          // Ver saldo
     Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');   // Depositar
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw'])->name('wallet.withdraw'); // Retirar
 });
 
-// GRUPO: JUEGOS (Casino)
-Route::get('/slots', function () {
-    return inertia('Slots');
-})->middleware('auth')->name('slots');
+// ========== CRASH GAME ==========
+Route::middleware(['auth'])->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS DE AUTENTICACIÓN (Laravel Breeze)
-|--------------------------------------------------------------------------
-| Login, Registro, Reset Password, Email Verification, etc.
-*/
+    // Página principal del juego (VIEW)
+    Route::get('/crash', function () {
+        return Inertia::render('Crash');
+    })->name('crash.index');
+
+    // API del juego
+    Route::post('/crash/start', [CrashController::class, 'start'])->name('crash.start');
+    Route::post('/crash/cashout', [CrashController::class, 'cashout'])->name('crash.cashout');
+    Route::get('/crash/history', [CrashController::class, 'history'])->name('crash.history');
+});
+
+// Breeze auth routes
 require __DIR__.'/auth.php';
+
