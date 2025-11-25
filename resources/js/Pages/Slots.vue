@@ -69,8 +69,8 @@ defineProps({
    CATEGORÍAS
 -------------------------- */
 const categories = [
-    { name: 'Casino', icon: '🎰',active: true },
-    { name: 'Slots', icon: '🎮'},
+    { name: 'Casino', icon: '🎰', },
+    { name: 'Slots', icon: '🎮', active: true},
     { name: 'Exclusivos Jackpot Celestial', icon: '⭐' },
     { name: 'Función de compra', icon: '🛒' },
     { name: 'Estrenos Celestial', icon: '✨' },
@@ -147,10 +147,9 @@ const openWarning = () => {
 const closeWarning = () => {
     showWarning.value = false;
 };
+
 </script>
-
 <style src="../../css/oficial.css"></style>
-
 <template>
     <Head title="Dashboard" />
 
@@ -174,12 +173,12 @@ const closeWarning = () => {
 
             <!-- Navigation -->
             <div class="nav-menu">
-                <a href="#" class="nav-link active" @click="closeMobileMenu">
+                <a href="#" class="nav-link " @click="closeMobileMenu">
                     <i class="fas fa-home"></i>
                     <span class="nav-text">Home</span>
                 </a>
 
-                <a href="#" class="nav-link "  @click.prevent="goToSlots">
+                <a href="#" class="nav-link active" @click="closeMobileMenu">
                     <i class="fa-solid fa-dice"></i>
                     <span class="nav-text">Slots</span>
                 </a>
@@ -469,4 +468,5 @@ const closeWarning = () => {
        
     </div>
 </template>
+
 

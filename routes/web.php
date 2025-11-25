@@ -90,3 +90,7 @@ Route::middleware(['auth'])->group(function () {
 // Rutas de autenticación de Breeze
 require __DIR__.'/auth.php';
 
+
+Route::get('/slots', function () {
+    return inertia('Slots');
+})->middleware('auth')->name('slots');
