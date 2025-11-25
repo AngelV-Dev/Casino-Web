@@ -116,6 +116,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw'])->name('wallet.withdraw'); // Retirar
 });
 
+// GRUPO: JUEGOS (Casino)
+Route::get('/slots', function () {
+    return inertia('Slots');
+})->middleware('auth')->name('slots');
+
 // ========== CRASH GAME ==========
 Route::middleware(['auth'])->group(function () {
 
@@ -130,6 +135,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/crash/history', [CrashController::class, 'history'])->name('crash.history');
 });
 
-// Breeze auth routes
+/*
+|--------------------------------------------------------------------------
+| RUTAS DE AUTENTICACIÓN (Laravel Breeze)
+|--------------------------------------------------------------------------
+| Login, Registro, Reset Password, Email Verification, etc.
+*/
 require __DIR__.'/auth.php';
-
