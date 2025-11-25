@@ -9,20 +9,29 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
+        // Aseguramos que la tabla Wallets use un ID compatible (UNSIGNED BIGINT)
         Schema::create('wallets', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->decimal('balance', 12, 2)->default(0);
-            $table->string('currency', 10)->default('USD');
-            $table->timestamps();
+            $table->id(); // Esto define el ID primario y UNSIGNED BIGINT
+            
+            // Clave foránea al usuario
+            // Es vital que user_id sea también una FK correcta para que la aplicación funcione
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            
+            // Saldo actual
+            $table->decimal('balance', 12, 2)->default(0.00);
+            
+            $table->string('currency')->default('USD'); 
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::dropIfExists('wallets');
     }

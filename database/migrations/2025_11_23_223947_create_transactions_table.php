@@ -7,10 +7,18 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
+        // 1. TRUCO VITAL: Borrar si existe para evitar el error que te salía
+        Schema::dropIfExists('transactions');
+
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('wallet_id');
+            
+            // La columna user_id es obligatoria, se mantiene NOT NULL
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            
+            // ✅ CORRECCIÓN: Hacemos wallet_id nullable para solucionar el error 150,
+            // ya que a veces MySQL no permite crear una FK NOT NULL de forma inmediata.
+            $table->foreignId('wallet_id')->nullable()->constrained('wallets')->cascadeOnDelete();
 
             $table->enum('type', [
                 'deposit',    // depósito
@@ -24,12 +32,12 @@ return new class extends Migration {
             $table->decimal('balance_before', 12, 2);
             $table->decimal('balance_after', 12, 2);
             
-            $table->string('description')->nullable(); // ✅ agregado
+            $table->string('description')->nullable(); 
             $table->string('reference')->nullable();
-            $table->timestamps();
+            
+            $table->string('status')->default('completed'); 
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
