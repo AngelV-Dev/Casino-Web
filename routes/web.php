@@ -6,6 +6,7 @@ use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\CrashController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,39 +55,50 @@ Route::middleware(['auth', 'role:support,moderator,admin,super_admin'])->prefix(
     Route::put('/tickets/{ticket}/close', [TicketController::class, 'close']);
 });
 
-// ========== EJEMPLO CON PERMISOS ESPECÍFICOS ==========
+// ========== Ruta con permisos específicos ==========
 Route::middleware(['auth', 'permission:manage_users'])->group(function () {
-Route::post('/users', [UserManagementController::class, 'store']);
+    Route::post('/users', [UserManagementController::class, 'store']);
 });
 
-// Dashboard privado para usuarios logueados
+// Dashboard privado
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// ========== PERFIL DE USUARIO ==========
+// ========== PERFIL ==========
 Route::middleware('auth')->group(function () {
 
-// Ver perfil
-Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    // Perfil
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-// Editar perfil
-Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-// Guardar avatar elegido
-Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
-    ->name('profile.select-avatar');
+    // Guardar avatar
+    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
+        ->name('profile.select-avatar');
 });
 
-// Wallet
+// ========== WALLET ==========
 Route::middleware(['auth'])->group(function () {
     Route::get('/wallet', [WalletController::class, 'show'])->name('wallet.show');
     Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw'])->name('wallet.withdraw');
 });
 
-// Rutas de autenticación de Breeze
-require __DIR__.'/auth.php';
+// ========== CRASH GAME ==========
+Route::middleware(['auth'])->group(function () {
 
+    // Página principal del juego (VIEW)
+    Route::get('/crash', function () {
+        return Inertia::render('Crash');
+    })->name('crash.index');
+
+    // API del juego
+    Route::post('/crash/start', [CrashController::class, 'start'])->name('crash.start');
+    Route::post('/crash/cashout', [CrashController::class, 'cashout'])->name('crash.cashout');
+    Route::get('/crash/history', [CrashController::class, 'history'])->name('crash.history');
+});
+
+// Breeze auth routes
+require __DIR__.'/auth.php';
