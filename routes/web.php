@@ -12,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
+use App\Http\Controllers\DiceGameController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\CrashController;
 use Illuminate\Foundation\Application;
@@ -134,6 +135,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/crash/cashout', [CrashController::class, 'cashout'])->name('crash.cashout');
     Route::get('/crash/history', [CrashController::class, 'history'])->name('crash.history');
 });
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Página del juego Dice
+    Route::get('/dice', [DiceGameController::class, 'index'])->name('dice.index');
+    
+    // API para jugar
+    Route::post('/dice/play', [DiceGameController::class, 'play'])->name('dice.play');
+    
+    // Historial de apuestas
+    Route::get('/dice/history', [DiceGameController::class, 'history'])->name('dice.history');
+    
+});
+
 
 /*
 |--------------------------------------------------------------------------
