@@ -1,0 +1,40 @@
+.high-flyer-container {
+    font-family: 'Arial', sans-serif;
+}
+
+.multiplier-display {
+    background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 2px solid #ffd700;
+}
+
+.plane-animation {
+    transition: all 0.1s ease;
+}
+
+.progress {
+    background-color: #444;
+}
+
+.progress-bar {
+    transition: width 0.1s linear;
+}
+
+.btn-start {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-cashout {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    border: none;
+}
+
+.history-entry {
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 5px;
+    background: #f8f9fa;
+}

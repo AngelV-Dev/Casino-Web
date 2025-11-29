@@ -14,6 +14,7 @@ use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\CrashController;
+use App\Http\Controllers\HighFlyerController; 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -120,6 +121,15 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/slots', function () {
     return inertia('Slots');
 })->middleware('auth')->name('slots');
+
+// HIGH FLYER GAME
+Route::get('/high-flyer', [HighFlyerController::class, 'index'])->name('high-flyer');
+// Rutas API para el juego
+Route::prefix('api/games/high-flyer')->group(function () {
+    Route::post('/start', [HighFlyerController::class, 'startGame']);
+    Route::post('/cashout', [HighFlyerController::class, 'cashOut']);
+    Route::post('/crash', [HighFlyerController::class, 'gameCrashed']);
+});
 
 // ========== CRASH GAME ==========
 Route::middleware(['auth'])->group(function () {
