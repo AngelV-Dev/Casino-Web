@@ -1,0 +1,29 @@
+/* ============================
+   🎨 PALETA PERSONAL iTovarr
+   ============================ */
+
+:root {
+  /* FONDOS PRINCIPALES */
+  --fondo-1: #070a06;
+  --fondo-2: #0a0f0d;
+  --fondo-3: #0c110e;
+
+  /* ACENTOS VERDES */
+  --acento-1: #84cc16;     /* Verde principal */
+  --acento-1-hover: #a3e635;
+  --acento-2: #16a34a;     /* Verde oscuro */
+  --acento-3: #4ade80;     /* Verde más claro */
+
+  /* MORADOS / DEGRADADOS */
+  --morado-1: #a855f7;
+  --morado-2: #9333ea;
+  --morado-suave: rgba(168, 85, 247, 0.4);
+
+  /* GRADIENTES (para fondos grandes) */
+  --grad-fondo: linear-gradient(to bottom, var(--fondo-1), var(--fondo-2), var(--fondo-1));
+  --grad-header: linear-gradient(to right, var(--morado-1), var(--acento-1));
+
+  /* OTROS */
+  --borde-dark: rgba(255,255,255,0.2);
+  --bg-opaco: rgba(0,0,0,0.4);
+}

@@ -21,6 +21,9 @@ class User extends Authenticatable
         'status',
         'suspension_reason',
         'suspended_at',
+        'avatar',
+        'banner',
+        'bio',
     ];
 
     protected $hidden = [

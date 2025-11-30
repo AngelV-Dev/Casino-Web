@@ -14,11 +14,14 @@ use App\Models\Friend;
 
 class ProfileController extends Controller
 {
+    /**
+     * Ver perfil público
+     */
     public function show(Request $request)
     {
         $userId = $request->user()->id;
 
-        // Obtener amigos aceptados (ya sea que el usuario envió o recibió la solicitud)
+        // Obtener amigos aceptados
         $friends = Friend::where(function ($q) use ($userId) {
                 $q->where('user_id', $userId)
                   ->orWhere('friend_id', $userId);
@@ -34,22 +37,23 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Editar perfil
+     */
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'user' => $request->user(),
         ]);
     }
 
+    /**
+     * Actualizar información del perfil
+     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-
-        if ($request->has('avatar')) {
-            $validated['avatar'] = $request->avatar;
-        }
 
         $request->user()->fill($validated);
 
@@ -62,6 +66,9 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit');
     }
 
+    /**
+     * Seleccionar avatar
+     */
     public function selectAvatar(Request $request): RedirectResponse
     {
         $request->validate([
@@ -72,9 +79,53 @@ class ProfileController extends Controller
         $user->avatar = $request->avatar;
         $user->save();
 
+        // Forzar actualización de la sesión
+        $request->session()->put('user', $user);
+
         return Redirect::back();
     }
 
+    /**
+     * Seleccionar banner
+     */
+    public function selectBanner(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'banner' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $user->banner = $request->banner;
+        $user->save();
+
+        // Forzar actualización de la sesión
+        $request->session()->put('user', $user);
+
+        return Redirect::back();
+    }
+
+    /**
+     * Actualizar biografía
+     */
+    public function updateBio(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'bio' => 'nullable|string|max:200',
+        ]);
+
+        $user = $request->user();
+        $user->bio = $request->bio;
+        $user->save();
+
+        // Forzar actualización de la sesión
+        $request->session()->put('user', $user);
+
+        return Redirect::back();
+    }
+
+    /**
+     * Eliminar cuenta
+     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([

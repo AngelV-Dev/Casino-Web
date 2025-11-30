@@ -97,17 +97,24 @@ Route::get('/dashboard', function () {
 // ========== PERFIL DE USUARIO ==========
 Route::middleware('auth')->group(function () {
 
-// Ver perfil
-Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    // Ver perfil
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
-// Editar perfil
-Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Editar perfil
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-// Guardar avatar elegido
-Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
-    ->name('profile.select-avatar');
+    // Guardar avatar elegido
+    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
+        ->name('profile.select-avatar');
+    
+    // ⬇️⬇️⬇️ AGREGAR ESTAS DOS RUTAS NUEVAS ⬇️⬇️⬇️
+    Route::post('/profile/select-banner', [ProfileController::class, 'selectBanner'])
+        ->name('profile.select-banner');
+    
+    Route::post('/profile/update-bio', [ProfileController::class, 'updateBio'])
+        ->name('profile.update-bio');
 });
 
 // Wallet
