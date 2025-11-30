@@ -24,6 +24,22 @@ const featuredGames = [
         label: 'Promoción',
         btnText: '¡Juega ya!'
     },
+    { 
+        id: 2, 
+        name: '$720,000 con Los 100 del Zeem', 
+        subtitle: 'Juega los hits del Zeem, gana premios y desafíos',
+        image: '/images/slots/zeem.jpg',
+        label: 'Promoción',
+        btnText: '¡Registrate Ya!'
+    },
+    { 
+        id: 3, 
+        name: 'Juego exclusivo: Mines', 
+        subtitle: 'Descubre, juega y conquista tu premio en Mines',
+        image: '/images/slots/mines-feature.jpg',
+        label: 'Exclusivo',
+        btnText: '¡Juega ya!'
+    },
 ];
 
 const slotsGames = [
@@ -48,12 +64,21 @@ const turboGames = [
     { id: 8, name: 'High Flyer', image: '/images/slots/high.png' },
 ];
 
-
+const exclusiveGames = [
+    { id: 1, name: 'Lines', image: '/images/slots/lines.png' },
+    { id: 2, name: 'High Flyer', image: '/images/slots/high.png' },
+    { id: 3, name: 'Mines', image: '/images/slots/minas.png' },
+    { id: 4, name: '20 hot blast', image: '/images/slots/hot.png' },
+    { id: 5, name: 'Plinko', image: '/images/slots/plinko.png' },
+    { id: 6, name: 'Wheel', image: '/images/slots/wheel.png' },
+    { id: 7, name: 'Gates Olympus', image: '/images/slots/olimpus.png' },
+    { id: 8, name: 'Shining Crown', image: '/images/slots/shining.png' },
+];
 
 </script>
 
 <template>
-<AppLayout title="Slots">
+<AppLayout title="Juegosturbo.vue">
 
 
         <!-- Featured Cards -->
@@ -149,7 +174,38 @@ const turboGames = [
                 </a>
             </div>
         </section>
-        
+
+        <!-- Sección: Exclusivos -->
+        <section class="game-section">
+            <div class="section-header-row">
+                <h2 class="section-title">
+                    <i class="fas fa-star section-icon"></i>
+                    Exclusivos Stake
+                </h2>
+                <button class="see-all-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="games-horizontal">
+                <a 
+                    v-for="game in exclusiveGames"
+                    :key="game.id"
+                    href="#"
+                    class="game-item"
+                    @click.prevent="openWarning"
+                >
+                    <div class="game-image-wrapper">
+                        <span class="game-provider-badge">{{ game.provider }}</span>
+                        <img :src="game.image" :alt="game.name" class="game-img" />
+                        <div class="game-hover-overlay">
+                            <button class="game-play-icon">▶</button>
+                        </div>
+                    </div>
+                    <p class="game-title">{{ game.name }}</p>
+                </a>
+            </div>
+        </section>
             <!-- PIE DE PAGINA-->
             <footer class="footer-container">
                 <div class="footer-grid">

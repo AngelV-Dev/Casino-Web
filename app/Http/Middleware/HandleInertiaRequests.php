@@ -33,7 +33,14 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user()
-                    ? $request->user()->only('id', 'name', 'email', 'avatar')
+                    ? [
+                        'id' => $request->user()->id,
+                        'name' => $request->user()->name,
+                        'email' => $request->user()->email,
+                        'avatar' => $request->user()->avatar ?? 'avatar_default.png',
+                        // ✅ AGREGADO: Balance actualizado desde la BD
+                        'balance' => (float) $request->user()->wallet->balance ?? 0,
+                    ]
                     : null,
             ],
         ];

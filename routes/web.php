@@ -17,6 +17,7 @@ use App\Http\Controllers\CrashController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\HighFlyerController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -121,24 +122,42 @@ Route::get('/slots', function () {
     return inertia('Slots');
 })->middleware('auth')->name('slots');
 
+Route::get('/crash', function () {
+    return inertia('Crash');
+})->middleware('auth')->name('crash');
+
+Route::get('/juegosturbo', function () {
+    return inertia('Juegosturbo');
+})->middleware('auth')->name('juegosturbo');
+
+Route::get('/ruleta', function () {
+    return inertia('Ruleta');
+})->middleware('auth')->name('ruleta');
+
+Route::get('/comunidad', function () {
+    return inertia('Comunidad');
+})->middleware('auth')->name('comunidad');
+
+Route::get('/settings', function () {
+    return inertia('Settings');
+})->middleware('auth')->name('settings');
+
+
 // ========== CRASH GAME ==========
+// HIGH FLYER GAME
 Route::middleware(['auth'])->group(function () {
+    // Página del juego
+    Route::get('/high-flyer', function () {
+        return inertia('Games/HighFlyer', [
+            'user' => Auth::user()
+        ]);
+    })->name('high-flyer');
 
-    // Página principal del juego (VIEW)
-    Route::get('/crash', function () {
-        return Inertia::render('Crash');
-    })->name('crash.index');
-
-    // API del juego
-    Route::post('/crash/start', [CrashController::class, 'start'])->name('crash.start');
-    Route::post('/crash/cashout', [CrashController::class, 'cashout'])->name('crash.cashout');
-    Route::get('/crash/history', [CrashController::class, 'history'])->name('crash.history');
+    // ✅ Rutas API del juego (CON middleware auth)
+    Route::post('/games/high-flyer/start', [HighFlyerController::class, 'startGame']);
+    Route::post('/games/high-flyer/cashout', [HighFlyerController::class, 'cashOut']);
+    Route::post('/games/high-flyer/crash', [HighFlyerController::class, 'gameCrashed']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS DE AUTENTICACIÓN (Laravel Breeze)
-|--------------------------------------------------------------------------
-| Login, Registro, Reset Password, Email Verification, etc.
-*/
 require __DIR__.'/auth.php';
+

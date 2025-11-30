@@ -1,69 +1,5 @@
 <script setup>
-
-
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-
-import { usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const user = page.props.auth.user;
-
-
-const isOpen = ref(false);        // Sidebar móvil
-const showMenu = ref(false);      // Menú del perfil
-const saldo = ref(250.00);        // Luego viene de BD
-const menuOpen = ref(false);
-
-const logout = () => {
-    router.post('/logout');
-};
-
-/* -------------------------
-   SIDEBAR - REACTIVO
--------------------------- */
-const isCollapsed = ref(false);
-const isMobileMenuOpen = ref(false);
-const isMobile = ref(false);
-
-const toggleSidebar = () => {
-    if (isMobile.value) {
-        isMobileMenuOpen.value = !isMobileMenuOpen.value;
-    } else {
-        isCollapsed.value = !isCollapsed.value;
-    }
-};
-
-const closeMobileMenu = () => {
-    if (isMobile.value) {
-        isMobileMenuOpen.value = false;
-    }
-};
-
-const checkScreenSize = () => {
-    isMobile.value = window.innerWidth < 768;
-    if (isMobile.value) {
-        isCollapsed.value = false;
-        isMobileMenuOpen.value = false;
-    }
-};
-
-onMounted(() => {
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('resize', checkScreenSize);
-});
-
-/* -------------------------
-   PROPS INERTIA
--------------------------- */
-defineProps({
-    canLogin: Boolean,
-    canRegister: Boolean,
-});
+import AppLayout from '@/Layouts/AppLayout.vue';
 
 /* -------------------------
    CATEGORÍAS
@@ -138,335 +74,215 @@ const exclusiveGames = [
     { id: 7, name: 'Gates Olympus', image: '/images/slots/olimpus.png' },
     { id: 8, name: 'Shining Crown', image: '/images/slots/shining.png' },
 ];
-const showWarning = ref(false);
 
-const openWarning = () => {
-    showWarning.value = true;
-};
 
-const closeWarning = () => {
-    showWarning.value = false;
-};
 </script>
 
-<style src="../../css/oficial.css"></style>
-
 <template>
-    <Head title="Dashboard" />
+    <AppLayout title="Dashboard">
 
-    <div class="flex h-screen bg-gray-900 text-white overflow-hidden">
+        <!-- AQUÍ SOLO VA EL CONTENIDO REAL DEL DASHBOARD -->
 
-        <!-- ===== SIDEBAR ===== -->
-        <nav class="sidebar"
-             :class="{ 
-                 collapsed: isCollapsed && !isMobile, 
-                 'mobile-open': isMobileMenuOpen && isMobile,
-                 'mobile-closed': !isMobileMenuOpen && isMobile
-             }">
+        <!-- Featured Cards -->
+        <div class="featured-section">
+            <div 
+                v-for="card in featuredGames" 
+                :key="card.id"
+                class="featured-card"
+                :style="{ backgroundImage: `url(${card.image})` }"
+            >
+                <div class="featured-overlay">
+                    <span class="featured-label">{{ card.label }}</span>
+                    <h3 class="featured-title">{{ card.name }}</h3>
+                    <p class="featured-subtitle">{{ card.subtitle }}</p>
+                    <button class="featured-btn">{{ card.btnText }}</button>
+                </div>
+            </div>
+        </div>
 
-            <!-- Logo y toggle -->
-            <div class="sidebar-header">
-                <h4 class="logo-text">Logo</h4>
-                <button class="toggle-btn-desktop" @click="toggleSidebar">
-                    <i class="fas" :class="isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+        <!-- Categorías horizontales -->
+        <div class="categories-wrapper">
+            <div class="categories-scroll">
+                <button 
+                    v-for="cat in categories" 
+                    :key="cat.name"
+                    class="category-chip"
+                    :class="{ active: cat.active }"
+                >
+                    <span>{{ cat.icon }}</span>
+                    <span>{{ cat.name }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección: Slots -->
+        <section class="game-section">
+            <div class="section-header-row">
+                <h2 class="section-title">
+                    <i class="fas fa-fire section-icon"></i>
+                    Slots
+                </h2>
+                <button class="see-all-btn">
+                    <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
 
-            <!-- Navigation -->
-            <div class="nav-menu">
-                <a href="#" class="nav-link active" @click="closeMobileMenu">
-                    <i class="fas fa-home"></i>
-                    <span class="nav-text">Home</span>
-                </a>
-
-                <a href="#" class="nav-link "  @click.prevent="goToSlots">
-                    <i class="fa-solid fa-dice"></i>
-                    <span class="nav-text">Slots</span>
-                </a>
-
-                <a href="#" class="nav-link" @click="closeMobileMenu">
-                    <i class="fa-solid fa-rocket"></i>
-                    <span class="nav-text">Crash</span>
-                </a>
-
-                <a href="#" class="nav-link" @click="closeMobileMenu">
-                    <i class="fa-solid fa-sack-dollar"></i>
-                    <span class="nav-text">Jackpots</span>
-                </a>
-
-                <a href="#" class="nav-link" @click="closeMobileMenu">
-                    <i class="fa-solid fa-bullseye"></i>
-                    <span class="nav-text">Ruulete</span>
-                </a>
-
-                <a href="#" class="nav-link" @click="closeMobileMenu">
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Comunidad</span>
-                </a>
-
-                <a href="#" class="nav-link" @click="closeMobileMenu">
-                    <i class="fas fa-cog"></i>
-                    <span class="nav-text">Settings</span>
-                </a>
-            </div>
-            
-        </nav>
-
-        <!-- ===== MAIN CONTENT ===== -->
-        <main class="main-content">
-
-            <!-- HEADER -->
-            <header class="top-header">
-                
-                <div class="header-left">
-                    <!-- Botón hamburguesa para mobile -->
-                    <button class="hamburger-btn" @click="toggleSidebar">
-                        <i class="fas fa-bars"></i>
-                    </button>
-
-                    <!-- Logo Stake -->
-                    <div class="stake-logo">
-                        <span class="logo-stake">Jackpots Celestial</span>
-                    </div>
-
-                    <!-- Botón volver (mobile) -->
-                    <button class="back-btn">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                </div>
-
-                <div class="header-center">
-                    <!-- Buscador -->
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" placeholder="Buscar..." class="search-input" />
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-4">
-
-                    <!-- CUADRO DE SALDO -->
-                       <div class="bg-white border border-gray-300 px-4 py-2 rounded-xl shadow flex flex-col text-center">
-
-                    </div>
-
-                    <!-- BOTÓN PERFIL -->
-                    <div class="relative">
-                       <button 
-                            @click="menuOpen = !menuOpen"
-                            class="w-10 h-10 rounded-full overflow-hidden shadow"
-                        >
-                            <img 
-                            :src="`/avatars/${user.avatar || 'avatar_default.png'}`"
-                            alt="avatar"
-                            class="w-full h-full object-cover"
-                            />
-                        </button>
-
-                        <!-- MENÚ DESPLEGABLE -->
-                        <transition name="fade">
-                            <div
-                                v-if="menuOpen"
-                                class="absolute right-0 mt-3 bg-white shadow-2xl rounded-xl w-64 p-3 z-50 border"
-                            >
-
-                                <!-- ITEM -->
-                                <Link href="/profile" class="menu-item">
-                                    <i class="fas fa-user text-gray-600"></i>
-                                    <span>Mi perfil</span>
-                                </Link>
-
-                                <div class="menu-item" >
-                                    <i class="fas fa-plus-circle text-gray-600"></i>
-                                    <span>Recargar</span>
-                                </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-wallet text-gray-600"></i>
-                                    <span>Retirar</span>
-                                </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-clock text-gray-600"></i>
-                                    <span>Historial de saldo</span>
-                                </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-trophy text-gray-600"></i>
-                                    <span>Mis apuestas deportivas</span>
-                                </div>
-
-                             
-
-                                <div class="menu-item">
-                                    <i class="fas fa-envelope text-gray-600"></i>
-                                    <span>Mis notificaciones</span>
-                                </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-eye-slash text-gray-600"></i>
-                                    <span>Ocultar saldo</span>
-                               </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-volume-up text-gray-600"></i>
-                                    <span>Sonidos</span>
-                                    <div class="ml-auto">
-                                        <input type="checkbox" class="toggle" />
-                                    </div>
-                                </div>
-
-                                <!-- CERRAR SESIÓN -->
-                                <button
-                                    @click="logout"
-                                    class="w-full mt-2 text-red-600 font-bold flex items-center gap-2 p-2"
-                                >
-                                    <i class="fas fa-power-off"></i>
-                                    Cerrar sesión
-                                </button>
-                            </div>
-                        </transition>
-                    </div>
-                </div>
-            </header>
-           
-
-            <!-- CONTENIDO -->
-            <div class="content-area">
-
-                <!-- Featured Cards -->
-                <div class="featured-section">
-                    <div 
-                        v-for="card in featuredGames" 
-                        :key="card.id"
-                        class="featured-card"
-                        :style="{ backgroundImage: `url(${card.image})` }"
-                    >
-                        <div class="featured-overlay">
-                            <span class="featured-label">{{ card.label }}</span>
-                            <h3 class="featured-title">{{ card.name }}</h3>
-                            <p class="featured-subtitle">{{ card.subtitle }}</p>
-                            <button class="featured-btn">{{ card.btnText }}</button>
+            <div class="games-horizontal">
+                <a 
+                    v-for="game in slotsGames"
+                    :key="game.id"
+                    href="#"
+                    class="game-item"
+                    @click.prevent="openWarning"
+                >
+                    <div class="game-image-wrapper">
+                        <img :src="game.image" :alt="game.name" class="game-img" />
+                        <div class="game-hover-overlay">
+                            <button class="game-play-icon">▶</button>
                         </div>
                     </div>
-                </div>
-
-                <!-- Categorías horizontales -->
-                <div class="categories-wrapper">
-                    <div class="categories-scroll">
-                        <button 
-                            v-for="cat in categories" 
-                            :key="cat.name"
-                            class="category-chip"
-                            :class="{ active: cat.active }"
-                        >
-                            <span>{{ cat.icon }}</span>
-                            <span>{{ cat.name }}</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Sección: Slots -->
-                <section class="game-section">
-                    <div class="section-header-row">
-                        <h2 class="section-title">
-                            <i class="fas fa-fire section-icon"></i>
-                            Slots
-                        </h2>
-                        <button class="see-all-btn">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="games-horizontal">
-                        <a 
-                            v-for="game in slotsGames"
-                            :key="game.id"
-                            href="#"
-                            class="game-item"
-                            @click.prevent="openWarning"
-                        >
-                            <div class="game-image-wrapper">
-                                <img :src="game.image" :alt="game.name" class="game-img" />
-                                <div class="game-hover-overlay">
-                                    <button class="game-play-icon">▶</button>
-                                </div>
-                            </div>
-                            <p class="game-title">{{ game.name }}</p>
-                        </a>
-                    </div>
-                </section>
-
-                <!-- Sección: Juegos Turbo -->
-                <section class="game-section">
-                    <div class="section-header-row">
-                        <h2 class="section-title">
-                            <i class="fas fa-bolt section-icon"></i>
-                            Juegos Turbo
-                        </h2>
-                        <button class="see-all-btn">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="games-horizontal">
-                        <a 
-                            v-for="game in turboGames"
-                            :key="game.id"
-                            href="#"
-                            class="game-item"
-                            @click.prevent="openWarning"
-                        >
-                            <div class="game-image-wrapper">
-                                <img :src="game.image" :alt="game.name" class="game-img" />
-                                <div class="game-hover-overlay">
-                                    <button class="game-play-icon">▶</button>
-                                </div>
-                            </div>
-                            <p class="game-title">{{ game.name }}</p>
-                        </a>
-                    </div>
-                </section>
-
-                <!-- Sección: Exclusivos Stake -->
-                <section class="game-section">
-                    <div class="section-header-row">
-                        <h2 class="section-title">
-                            <i class="fas fa-star section-icon"></i>
-                            Exclusivos Stake
-                        </h2>
-                        <button class="see-all-btn">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="games-horizontal">
-                        <a 
-                            v-for="game in exclusiveGames"
-                            :key="game.id"
-                            href="#"
-                            class="game-item"
-                            @click.prevent="openWarning"
-                        >
-                            <div class="game-image-wrapper">
-                                <span class="game-provider-badge">{{ game.provider }}</span>
-                                <img :src="game.image" :alt="game.name" class="game-img" />
-                                <div class="game-hover-overlay">
-                                    <button class="game-play-icon">▶</button>
-                                </div>
-                            </div>
-                            <p class="game-title">{{ game.name }}</p>
-                        </a>
-                    </div>
-                </section>
-
+                    <p class="game-title">{{ game.name }}</p>
+                </a>
             </div>
-        </main>
-       
+        </section>
 
-       
+        <!-- Sección: Juegos Turbo -->
+        <section class="game-section">
+            <div class="section-header-row">
+                <h2 class="section-title">
+                    <i class="fas fa-bolt section-icon"></i>
+                    Juegos Turbo
+                </h2>
+                <button class="see-all-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
 
-       
-    </div>
+            <div class="games-horizontal">
+                <a 
+                    v-for="game in turboGames"
+                    :key="game.id"
+                    href="#"
+                    class="game-item"
+                    @click.prevent="openWarning"
+                >
+                    <div class="game-image-wrapper">
+                        <img :src="game.image" :alt="game.name" class="game-img" />
+                        <div class="game-hover-overlay">
+                            <button class="game-play-icon">▶</button>
+                        </div>
+                    </div>
+                    <p class="game-title">{{ game.name }}</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Sección: Exclusivos -->
+        <section class="game-section">
+            <div class="section-header-row">
+                <h2 class="section-title">
+                    <i class="fas fa-star section-icon"></i>
+                    Exclusivos Stake
+                </h2>
+                <button class="see-all-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="games-horizontal">
+                <a 
+                    v-for="game in exclusiveGames"
+                    :key="game.id"
+                    href="#"
+                    class="game-item"
+                    @click.prevent="openWarning"
+                >
+                    <div class="game-image-wrapper">
+                        <span class="game-provider-badge">{{ game.provider }}</span>
+                        <img :src="game.image" :alt="game.name" class="game-img" />
+                        <div class="game-hover-overlay">
+                            <button class="game-play-icon">▶</button>
+                        </div>
+                    </div>
+                    <p class="game-title">{{ game.name }}</p>
+                </a>
+            </div>
+        </section>
+            <!-- PIE DE PAGINA-->
+            <footer class="footer-container">
+                <div class="footer-grid">
+
+                    <!-- Acerca de -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Acerca de</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Nosotros</a></li>
+                                <li><a class="footer-link" href="#">Promociones</a></li>
+                                <li><a class="footer-link" href="#">Términos y Condiciones</a></li>
+                                <li><a class="footer-link" href="#">Privacidad</a></li>
+                                <li><a class="footer-link" href="#">Juego Responsable</a></li>
+                             </ul>
+                    </div>
+
+                    <!-- Casino -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Casino</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Los más jugados</a></li>
+                                <li><a class="footer-link" href="#">Jackpots</a></li>
+                                <li><a class="footer-link" href="#">Megaways</a></li>
+                                <li><a class="footer-link" href="#">Alta volatilidad</a></li>
+                            </ul>
+                    </div>
+
+
+                    <!-- Juegos -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Otros Juegos</h3>
+                            <ul>
+                                 <li><a class="footer-link" href="#">E-Sports</a></li>
+                                <li><a class="footer-link" href="#">Crash Games</a></li>
+                                <li><a class="footer-link" href="#">Virtuales</a></li>
+                            </ul>
+                    </div>
+
+                    <!-- Ayuda -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Ayuda</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Contáctenos</a></li>
+                                <li><a class="footer-link" href="#">Recargas</a></li>
+                                <li><a class="footer-link" href="#">Retiros</a></li>
+                                <li><a class="footer-link" href="#">Preguntas frecuentes</a></li>
+                                <li><a class="footer-link" href="#">Reclamos y disputas</a></li>
+                            </ul>
+                    </div>
+
+               </div>
+
+               <!-- Línea -->
+               <div class="footer-divider"></div>
+
+               <!-- Redes + App -->
+                    <div class="footer-bottom">
+                        <div class="footer-socials">
+                             <a href="#" class="footer-social"><i class="fab fa-facebook-f"></i></a>
+                             <a href="#" class="footer-social"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="footer-social"><i class="fab fa-tiktok"></i></a>
+                            <a href="#" class="footer-social"><i class="fab fa-youtube"></i></a>
+                        </div>
+
+                    <a href="#" class="footer-app-btn">📲 Descargar App Android</a>
+
+                    <a href="#" class="footer-book">📘 Libro de Reclamaciones</a>
+
+               </div>
+
+               <!-- Info -->
+                <div class="footer-info">
+                     <p>© 2025 Jackpots Celestial — Todos los derechos reservados.</p>
+                    <p class="footer-warning">Los juegos de apuestas pueden causar ludopatía. Juega con responsabilidad.</p>
+                </div>
+            </footer>
+    </AppLayout>
 </template>
-

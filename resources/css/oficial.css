@@ -1,3 +1,5 @@
+
+
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css");
 
 * {
@@ -8,7 +10,7 @@
 
 .app-container {
     display: flex;
-    background: #182426;
+    background: hsl(270, 93%, 5%);
     min-height: 100vh;
     color: #fff;
 }
@@ -16,7 +18,7 @@
 /* ===== SIDEBAR ===== */
 .sidebar {
     width: 240px;
-    background: #121611;
+    background: #0f0219;
     height: 100vh;
     position: fixed;
     left: 0;
@@ -37,13 +39,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(50, 10, 45, 0.508);
 }
 
 .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #fff;
+    color: #eae8eb;
     margin: 0;
     white-space: nowrap;
     transition: opacity 0.2s;
@@ -84,13 +86,13 @@
 
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    color: #eff70d;
 }
 
 .nav-link.active {
-    background: rgba(118, 217, 60, 0.1);
-    color: #00ffa3;
-    border-left: 3px solid #00ffa3;
+    background: rgba(197, 24, 255, 0.19);
+    color: #f6ff00;
+    border-left: 3px solid #9500ff;
 }
 
 .nav-link i {
@@ -160,7 +162,7 @@
 
 /* ===== HEADER ===== */
 .top-header {
-    background: #182426;
+    background: #160522;
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
@@ -203,7 +205,7 @@
 }
 
 .logo-stake {
-    background: linear-gradient(135deg, #42cc5eff 0%, #00ff80ff 100%);
+    background: linear-gradient(135deg, rgb(68, 2, 60) 0%, rgb(51, 0, 255) 100%); 
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -230,7 +232,7 @@
 
 .search-input {
     width: 100%;
-    background: #0f212e;
+    background: #160f2e;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 0.75rem 1rem 0.75rem 2.75rem;
@@ -240,7 +242,7 @@
 
 .search-input:focus {
     outline: none;
-    border-color: #00ff55ff;
+    border-color: rgb(255, 0, 111);
 }
 
 .search-input::placeholder {
@@ -262,28 +264,6 @@
     white-space: nowrap;
 }
 
-.btn-login {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.btn-login:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.btn-register {
-    background: linear-gradient(135deg, #00ffa3 0%, #00ff59ff 100%);
-    color: #0f212e;
-    border: none;
-    font-weight: 700;
-}
-
-.btn-register:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(8, 85, 27, 0.3);
-}
-
 /* ===== CONTENT AREA ===== */
 .content-area {
     padding: 1.5rem;
@@ -292,7 +272,7 @@
 /* Featured Cards */
 .featured-section {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));       
     gap: 1rem;
     margin-bottom: 2rem;
 }
@@ -322,8 +302,8 @@
 }
 
 .featured-label {
-    background: #00ff6ee5;
-    color: #0f212e;
+    background: #9500ffe5;
+    color: #2a0f2e;
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -345,8 +325,8 @@
 }
 
 .featured-btn {
-    background: #00ff84ff;
-    color: #0f212e;
+    background: rgb(81, 0, 255);
+    color: #edf1f4;
     border: none;
     padding: 0.625rem 1.25rem;
     border-radius: 6px;
@@ -358,7 +338,7 @@
 }
 
 .featured-btn:hover {
-    background: #00d486;
+    background: #a200d4;
     transform: scale(1.05);
 }
 
@@ -387,7 +367,7 @@
 }
 
 .category-chip {
-    background: #1a3827ff;
+    background: rgb(41, 1, 41);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.7);
     padding: 0.625rem 1rem;
@@ -408,9 +388,9 @@
 }
 
 .category-chip.active {
-    background: rgba(0, 255, 163, 0.15);
-    border-color: #00ffa3;
-    color: #00ffa3;
+    background: rgba(242, 255, 2, 0.15);
+    border-color: #e1ff00;
+    color: #dccf10;
 }
 
 /* Game Sections */
@@ -435,7 +415,7 @@
 }
 
 .section-icon {
-    color: #00ffa3;
+    color: #f2ff00;
 }
 
 .see-all-btn {
@@ -447,6 +427,11 @@
     padding: 0.5rem;
     transition: color 0.2s;
 }
+
+.see-all-btn:hover {
+    color: #ddff00;
+}
+
 
 .see-all-btn:hover {
     color: #00ffa3;
@@ -482,7 +467,7 @@
     border-radius: 10px;
     overflow: hidden;
     aspect-ratio: 3/4;
-    background: #1a2c38;
+    background: #dffb289b;
 }
 
 .game-img {
@@ -525,8 +510,8 @@
 }
 
 .game-play-icon {
-    background: #00ffa3;
-    color: #0f212e;
+    background: #2b0049;
+    color: #e1e809;
     border: none;
     width: 50px;
     height: 50px;
@@ -573,101 +558,101 @@
     .sidebar {
         transform: translateX(-100%);
     }
-    
+
     .sidebar.mobile-open {
         transform: translateX(0);
     }
-    
+
     .mobile-overlay {
         display: block;
     }
-    
+
     .main-content {
         margin-left: 0;
         width: 100%;
     }
-    
+
     .sidebar.collapsed + .main-content {
         margin-left: 0;
         width: 100%;
     }
-    
+
     /* Header mobile */
     .hamburger-btn {
         display: block;
     }
-    
+
     .back-btn {
         display: block;
     }
-    
+
     .stake-logo {
         font-size: 1.25rem;
     }
-    
+
     .top-header {
         padding: 0.75rem 1rem;
     }
-    
+
     .header-center {
         max-width: none;
     }
-    
+
     .search-box {
         display: none;
     }
-    
+
     .btn-header {
         padding: 0.5rem 0.875rem;
         font-size: 0.8rem;
     }
-    
+
     /* Content */
     .content-area {
         padding: 1rem;
     }
-    
+
     /* Featured cards mobile */
     .featured-section {
         grid-template-columns: 1fr;
         gap: 0.75rem;
     }
-    
+
     .featured-card {
         min-height: 160px;
     }
-    
+
     .featured-overlay {
         padding: 1rem;
     }
-    
+
     .featured-title {
         font-size: 1rem;
     }
-    
+
     .featured-subtitle {
         font-size: 0.8rem;
     }
-    
+
     /* Categories */
     .categories-scroll {
         gap: 0.5rem;
     }
-    
+
     .category-chip {
         padding: 0.5rem 0.875rem;
         font-size: 0.8rem;
     }
-    
+
     /* Games */
     .game-item {
         flex: 0 0 140px;
     }
-    
+
     .section-title {
         font-size: 1.125rem;
     }
-    
+
     .game-section {
         margin-bottom: 2rem;
     }
@@ -677,20 +662,20 @@
     .header-right {
         gap: 0.5rem;
     }
-    
+
     .btn-header {
         padding: 0.5rem 0.75rem;
         font-size: 0.75rem;
     }
-    
+
     .featured-card {
         min-height: 140px;
     }
-    
+
     .game-item {
         flex: 0 0 120px;
     }
-    
+
     .game-play-icon {
         width: 40px;
         height: 40px;
@@ -703,6 +688,13 @@
         flex: 0 0 180px;
     }
 }
+
+.logo-stake-img {
+    height: 60px;   /* Ajusta el tamaño vertical */
+    width: auto;    /* Mantiene la proporción correcta */
+    object-fit: contain;
+}
+
 
 /* Fondo oscuro */
 .modal-overlay {
@@ -776,7 +768,7 @@
     border-radius: 8px;
     cursor: pointer;
     margin-top: 10px;
-    
+
 }
 
 /* Footer */
@@ -787,9 +779,9 @@
 }
 
 .modal-footer a {
-    color: #0fa448;
+    color: #570fa4;
     font-weight: bold;
-    
+
 }
 
 
@@ -815,7 +807,7 @@
 
 /* Items del menú */
 .menu-item {
-    @apply flex items-center gap-3 p-2 rounded hover:bg-gray-100 cursor-pointer text-gray-800;
+    @apply flex items-center gap-3 p-2 rounded hover:bg-[#250B38] cursor-pointer text-[#FFFFFF];
 }
 
 /* Toggle sonidos */
@@ -823,7 +815,7 @@
     appearance: none;
     width: 35px;
     height: 18px;
-    background: #ccc;
+    background: #ff3bdb;
     border-radius: 20px;
     position: relative;
     cursor: pointer;
@@ -842,5 +834,155 @@
     left: 1px;
     transition: .2s;
 }
+/*----------------PIE DE PAGINA-----------------------*/
+/* Contenedor general */
+.footer-container {
+    background: hsl(270, 93%, 5%);
+    padding: 50px 20px;
+    color: #cfcfcf;
+    border-top: 1px solid #292929;
+    margin-top: 60px;
+}
 
+/* Grid general */
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 30px;
+    max-width: 1300px;
+    margin: auto;
+}
 
+/* Título */
+.footer-title {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-left: 4px solid #d0ff00;
+    padding-left: 9px;
+    margin-bottom: 15px;
+}
+
+/* Links */
+.footer-link {
+    color: #b3b3b3;
+    text-decoration: none;
+    transition: 0.2s;
+    font-size: 0.95rem;
+}
+
+.footer-link:hover {
+    color: #ffffff;
+    margin-left: 3px;
+}
+
+/* Divider */
+.footer-divider {
+    width: 100%;
+    border-top: 1px solid #333;
+    margin: 35px auto;
+    max-width: 1300px;
+}
+
+/* Redes y botones */
+.footer-bottom {
+    max-width: 1300px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+}
+
+.footer-socials {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Iconos redes */
+.footer-social {
+    width: 42px;
+    height: 42px;
+    background: #362b3a;
+    border: 1px solid #bfee13;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cfcfcf;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.footer-social:hover {
+    border-color: #eaff00;
+    color: #c3ff00;
+    transform: translateY(-3px);
+}
+
+/* Botón App */
+.footer-app-btn {
+    background: #dce5ac;
+    color: black;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.25s;
+}
+
+.footer-app-btn:hover {
+    background: #ffe603;
+}
+
+/* Libro de reclamaciones */
+.footer-book {
+    color: #f6ff00;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.footer-book:hover {
+    color: #e253ff;
+}
+
+/* Info final */
+.footer-info {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.9rem;
+    color: #9e9e9e;
+}
+.footer-warning {
+    margin-top: 6px;
+}
+
+/* 📱 MOBILE */
+@media (min-width: 600px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 🖥 TABLET */
+@media (min-width: 900px) {
+    .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* 🖥 LARGE DESKTOP */
+@media (min-width: 1200px) {
+    .footer-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+}

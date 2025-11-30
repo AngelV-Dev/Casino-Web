@@ -1,199 +1,172 @@
 <script setup>
-import { ref, onMounted } from "vue"
-import axios from "axios"
+import AppLayout from '@/Layouts/AppLayout.vue';
 
-// Props desde Laravel
-const props = defineProps({
-    balance: Number
-})
-
-/* === VARIABLES === */
-const balance = ref(Number(props.balance))
-const multiplier = ref(1.00)
-const isRunning = ref(false)
-const isCrashed = ref(false)
-const animation = ref(null)
-
-const betAmount = ref("")
-const cashoutAt = ref(null)
-const crashPoint = ref(null)
-
-const history = ref([])
-
-/* === INICIAR JUEGO === */
-const startGame = async () => {
-    if (!betAmount.value || betAmount.value <= 0) {
-        alert("Monto inválido")
-        return
+const juegosCrash = [
+    {
+        id: 1,
+        name: 'High Flyer',
+        image: '/images/slots/high.png',
+        routeName: 'high-flyer'
+    },
+    {
+        id: 2,
+        name: 'Big Bass Crash',
+        image: '/images/slots/high.png',
+        routeName: 'high-flyer'
+    },
+    {
+        id: 3,
+        name: 'Spaceman',
+        image: '/images/slots/high.png',
+        routeName: 'high-flyer'
     }
+];
 
-    const res = await axios.post("/crash/start", {
-        amount: betAmount.value
-    })
-
-    if (!res.data.success) {
-        alert(res.data.message)
-        return
-    }
-
-    balance.value = res.data.new_balance
-    crashPoint.value = res.data.crash_at
-
-    // reset
-    multiplier.value = 1.00
-    isCrashed.value = false
-    isRunning.value = true
-    cashoutAt.value = null
-
-    animate()
-}
-
-/* === ANIMACIÓN === */
-const animate = () => {
-    animation.value = setInterval(() => {
-        multiplier.value += 0.01
-
-        if (multiplier.value >= crashPoint.value) {
-            crash()
-        }
-    }, 50)
-}
-
-/* === CASHOUT === */
-const doCashout = async () => {
-    if (!isRunning.value || isCrashed.value) return
-
-    cashoutAt.value = multiplier.value
-    isRunning.value = false
-
-    clearInterval(animation.value)
-
-    const res = await axios.post("/crash/cashout", {
-        cashout_at: cashoutAt.value
-    })
-
-    if (res.data.success) {
-        balance.value = res.data.new_balance
-        loadHistory()
-    } else {
-        alert(res.data.message)
-    }
-}
-
-/* === CUANDO CRASHEA === */
-const crash = () => {
-    isCrashed.value = true
-    isRunning.value = false
-    clearInterval(animation.value)
-    loadHistory()
-}
-
-/* === HISTORIAL === */
-const loadHistory = async () => {
-    const res = await axios.get('/crash/history')
-    history.value = res.data
-}
-
-onMounted(() => loadHistory())
 </script>
 
 <template>
-<div class="min-h-screen bg-black text-white flex items-center justify-center p-8">
-    <div class="w-full max-w-3xl bg-gray-900 rounded-2xl p-8 shadow-lg border border-gray-700">
+    <AppLayout title="Crash">
 
-        <!-- SALDO -->
-        <div class="flex justify-between mb-6">
-            <h1 class="text-2xl font-bold">Crash Game</h1>
-            <div class="text-neon-green text-xl">
-                Saldo: S/ {{ balance.toFixed(2) }}
+        <!-- BANNER -->
+        <div class="crash-banner">
+            <img src="images/slots/high1.png" alt="Crash Banner">
+        </div>
+
+        <!-- JUEGOS -->
+        <div class="crash-games">
+            <div 
+                v-for="game in juegosCrash" 
+                :key="game.id"
+                class="crash-card"
+            >
+                <a :href="route(game.routeName)">
+                <img :src="game.image" :alt="game.name">
+                </a>
             </div>
         </div>
 
-        <!-- MULTIPLICADOR -->
-        <div class="text-center my-10">
-            <div class="text-6xl font-extrabold" 
-                :class="isCrashed ? 'text-red-500' : 'text-neon-green'">
-                {{ multiplier.toFixed(2) }}x
-            </div>
-
-            <div v-if="isCrashed" class="text-red-400 text-xl mt-3">
-                ¡CRASHED!
-            </div>
+        <!-- BOTÓN VER MÁS -->
+        <div class="crash-btn-wrapper">
+            <button class="crash-btn-more">Ver más</button>
         </div>
+            <!-- PIE DE PAGINA-->
+            <footer class="footer-container">
+                <div class="footer-grid">
 
-        <!-- CONTROLES -->
-        <div class="grid grid-cols-2 gap-6">
+                    <!-- Acerca de -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Acerca de</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Nosotros</a></li>
+                                <li><a class="footer-link" href="#">Promociones</a></li>
+                                <li><a class="footer-link" href="#">Términos y Condiciones</a></li>
+                                <li><a class="footer-link" href="#">Privacidad</a></li>
+                                <li><a class="footer-link" href="#">Juego Responsable</a></li>
+                             </ul>
+                    </div>
 
-            <!-- INPUT DE APUESTA -->
-            <div class="flex flex-col">
-                <label class="mb-2 text-sm text-gray-300">Monto a apostar</label>
-                <input 
-                    v-model="betAmount"
-                    type="number"
-                    class="p-3 rounded bg-gray-800 text-white"
-                    :disabled="isRunning"
-                    placeholder="Ej: 10"
-                />
-            </div>
+                    <!-- Casino -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Casino</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Los más jugados</a></li>
+                                <li><a class="footer-link" href="#">Jackpots</a></li>
+                                <li><a class="footer-link" href="#">Megaways</a></li>
+                                <li><a class="footer-link" href="#">Alta volatilidad</a></li>
+                            </ul>
+                    </div>
 
-            <!-- BOTONES -->
-            <div class="flex items-end gap-4">
 
-                <button 
-                    @click="startGame"
-                    class="flex-1 py-3 rounded-xl bg-green-500 hover:bg-green-600 transition font-semibold"
-                    :disabled="isRunning"
-                >
-                    Start
-                </button>
+                    <!-- Juegos -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Otros Juegos</h3>
+                            <ul>
+                                 <li><a class="footer-link" href="#">E-Sports</a></li>
+                                <li><a class="footer-link" href="#">Crash Games</a></li>
+                                <li><a class="footer-link" href="#">Virtuales</a></li>
+                            </ul>
+                    </div>
 
-                <button
-                    @click="doCashout"
-                    class="flex-1 py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-black font-bold transition"
-                    :disabled="!isRunning"
-                >
-                    Cashout
-                </button>
-            </div>
-        </div>
+                    <!-- Ayuda -->
+                    <div class="footer-col">
+                        <h3 class="footer-title">Ayuda</h3>
+                            <ul>
+                                <li><a class="footer-link" href="#">Contáctenos</a></li>
+                                <li><a class="footer-link" href="#">Recargas</a></li>
+                                <li><a class="footer-link" href="#">Retiros</a></li>
+                                <li><a class="footer-link" href="#">Preguntas frecuentes</a></li>
+                                <li><a class="footer-link" href="#">Reclamos y disputas</a></li>
+                            </ul>
+                    </div>
 
-        <!-- HISTORIAL -->
-        <div class="bg-black bg-opacity-40 p-4 rounded-xl border border-gray-800 mt-6">
-            <h3 class="text-xl mb-3">Historial</h3>
+               </div>
 
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-gray-400">
-                        <th>Apuesta</th>
-                        <th>Crash</th>
-                        <th>Cashout</th>
-                        <th>Ganancia</th>
-                    </tr>
-                </thead>
+               <!-- Línea -->
+               <div class="footer-divider"></div>
 
-                <tbody>
-                    <tr v-for="g in history" :key="g.id" class="border-t border-gray-700">
-                        <td>S/ {{ g.bet_amount }}</td>
-                        <td>x{{ g.crash_point }}</td>
+               <!-- Redes + App -->
+                    <div class="footer-bottom">
+                        <div class="footer-socials">
+                             <a href="#" class="footer-social"><i class="fab fa-facebook-f"></i></a>
+                             <a href="#" class="footer-social"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="footer-social"><i class="fab fa-tiktok"></i></a>
+                            <a href="#" class="footer-social"><i class="fab fa-youtube"></i></a>
+                        </div>
 
-                        <td v-if="g.cashout_at">x{{ g.cashout_at }}</td>
-                        <td v-else>—</td>
+                    <a href="#" class="footer-app-btn">📲 Descargar App Android</a>
 
-                        <td v-if="g.profit" class="text-green-400">
-                            +S/ {{ g.profit }}
-                        </td>
-                        <td v-else class="text-red-400">Perdido</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                    <a href="#" class="footer-book">📘 Libro de Reclamaciones</a>
 
-    </div>
-</div>
+               </div>
+
+               <!-- Info -->
+                <div class="footer-info">
+                     <p>© 2025 Jackpots Celestial — Todos los derechos reservados.</p>
+                    <p class="footer-warning">Los juegos de apuestas pueden causar ludopatía. Juega con responsabilidad.</p>
+                </div>
+            </footer>
+    </AppLayout>
 </template>
 
-<style>
-.text-neon-green {
-    color: #39ff14;
+<style scoped>
+.crash-banner img {
+    width: 100%;
+    border-radius: 14px;
+    margin-bottom: 20px;
 }
+
+/* cards */
+.crash-games {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.crash-card {
+    width: 300px;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.crash-card:hover {
+    transform: translateY(-6px);
+}
+
+.crash-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* botón */
+.crash-btn-wrapper {
+    margin-top: 30px;
+    text-align: center;
+}
+
+
+
 </style>
