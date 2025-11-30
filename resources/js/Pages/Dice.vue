@@ -1,11 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { router } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Head } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: Object,
-    balance: [Number, String], // Aceptar ambos tipos
+    balance: [Number, String],
     history: Array
 });
 
@@ -17,29 +16,37 @@ const isPlaying = ref(false);
 const diceNumber = ref('?');
 const multiplier = ref(1.98);
 const winChance = ref(50.00);
-const currentBalance = ref(parseFloat(props.balance) || 0); // Convertir a número
+const currentBalance = ref(parseFloat(props.balance) || 0);
 const gameHistory = ref(props.history || []);
 
 // Popup de resultado
 const showResult = ref(false);
 const resultData = ref(null);
 
+// Timeout para debounce
+let updateTimeout = null;
+
 // Calcular multiplicador
 const calculateMultiplier = () => {
-    const chance = direction.value === 'under' ? target.value : (100 - target.value);
+    const chance = direction.value === 'under' ? parseFloat(target.value) : (100 - parseFloat(target.value));
     if (chance <= 0) return 0;
     return ((100 / chance) * 0.99).toFixed(2);
 };
 
 // Calcular probabilidad de ganar
 const calculateWinChance = () => {
-    return direction.value === 'under' ? target.value.toFixed(2) : (100 - target.value).toFixed(2);
+    const chance = direction.value === 'under' ? parseFloat(target.value) : (100 - parseFloat(target.value));
+    return chance.toFixed(2);
 };
 
-// Actualizar valores cuando cambia el target o dirección
+// Actualizar valores con debounce (evita lag)
 const updateValues = () => {
-    multiplier.value = calculateMultiplier();
-    winChance.value = calculateWinChance();
+    if (updateTimeout) clearTimeout(updateTimeout);
+    
+    updateTimeout = setTimeout(() => {
+        multiplier.value = calculateMultiplier();
+        winChance.value = calculateWinChance();
+    }, 50);
 };
 
 // Cambiar dirección
@@ -54,30 +61,37 @@ const setBet = (amount) => {
 };
 
 const doubleBet = () => {
-    betAmount.value = (betAmount.value * 2).toFixed(2);
+    betAmount.value = (parseFloat(betAmount.value) * 2).toFixed(2);
+};
+
+const halveBet = () => {
+    betAmount.value = (parseFloat(betAmount.value) / 2).toFixed(2);
 };
 
 // Ganancia potencial
 const potentialWin = computed(() => {
-    return (betAmount.value * multiplier.value).toFixed(2);
+    return (parseFloat(betAmount.value) * parseFloat(multiplier.value)).toFixed(2);
 });
 
 // Jugar
 const playDice = async () => {
     if (isPlaying.value) return;
 
+    const bet = parseFloat(betAmount.value);
+    const targetNum = parseFloat(target.value);
+
     // Validaciones
-    if (betAmount.value < 0.10) {
+    if (bet < 0.10) {
         alert('La apuesta mínima es S/ 0.10');
         return;
     }
 
-    if (betAmount.value > 10000) {
+    if (bet > 10000) {
         alert('La apuesta máxima es S/ 10,000');
         return;
     }
 
-    if (betAmount.value > currentBalance.value) {
+    if (bet > currentBalance.value) {
         alert('Saldo insuficiente');
         return;
     }
@@ -90,11 +104,11 @@ const playDice = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
             },
             body: JSON.stringify({
-                bet_amount: betAmount.value,
-                target: target.value,
+                bet_amount: bet,
+                target: targetNum,
                 direction: direction.value
             })
         });
@@ -102,16 +116,13 @@ const playDice = async () => {
         const data = await response.json();
 
         if (data.success) {
-            // Mostrar resultado después de animación
             setTimeout(() => {
-                diceNumber.value = data.result.result_number.toFixed(2);
-                currentBalance.value = data.result.new_balance;
+                diceNumber.value = parseFloat(data.result.result_number).toFixed(2);
+                currentBalance.value = parseFloat(data.result.new_balance);
                 
-                // Mostrar popup
                 resultData.value = data.result;
                 showResult.value = true;
 
-                // Agregar al historial
                 addToHistory(data.result);
             }, 1000);
         } else {
@@ -135,22 +146,25 @@ const closeResult = () => {
     showResult.value = false;
 };
 
-// Agregar al historial
+// Agregar al historial (optimizado)
 const addToHistory = (result) => {
     const newBet = {
-        bet_amount: betAmount.value,
-        target_number: target.value,
+        id: Date.now(),
+        bet_amount: parseFloat(betAmount.value),
+        target_number: parseFloat(target.value),
         direction: direction.value,
-        result_number: result.result_number,
-        multiplier: result.multiplier,
-        profit: result.profit,
+        result_number: parseFloat(result.result_number),
+        multiplier: parseFloat(result.multiplier),
+        profit: parseFloat(result.profit),
         is_win: result.is_win,
         created_at: new Date().toISOString()
     };
     
     gameHistory.value.unshift(newBet);
+    
+    // Limitar a 20 items para evitar lag
     if (gameHistory.value.length > 20) {
-        gameHistory.value.pop();
+        gameHistory.value = gameHistory.value.slice(0, 20);
     }
 };
 
@@ -158,18 +172,32 @@ const addToHistory = (result) => {
 const formatDate = (date) => {
     return new Date(date).toLocaleTimeString('es-PE', { 
         hour: '2-digit', 
-        minute: '2-digit' 
+        minute: '2-digit',
+        second: '2-digit'
     });
+};
+
+// Función segura para formatear números
+const safeToFixed = (value, decimals = 2) => {
+    const num = typeof value === 'number' ? value : parseFloat(value || 0);
+    return num.toFixed(decimals);
 };
 
 // Inicializar
 onMounted(() => {
     updateValues();
 });
+
+// Limpiar al desmontar (evita memory leaks)
+onUnmounted(() => {
+    if (updateTimeout) clearTimeout(updateTimeout);
+});
 </script>
 
 <template>
-    <AuthenticatedLayout>
+    <Head title="Dice Game" />
+    
+    <div class="game-wrapper">
         <div class="game-container">
             <!-- Header -->
             <div class="game-header">
@@ -195,7 +223,7 @@ onMounted(() => {
                         <div class="target-display">
                             <div>
                                 <div class="label">Número Objetivo</div>
-                                <div class="target-value">{{ target.toFixed(2) }}</div>
+                                <div class="target-value">{{ parseFloat(target).toFixed(2) }}</div>
                             </div>
                             <div>
                                 <div class="label">Multiplicador</div>
@@ -204,8 +232,9 @@ onMounted(() => {
                         </div>
                         <input 
                             type="range" 
-                            v-model="target" 
+                            v-model.number="target" 
                             @input="updateValues"
+                            @change="updateValues"
                             min="1.01" 
                             max="98.99" 
                             step="0.01"
@@ -239,7 +268,7 @@ onMounted(() => {
                 <div class="controls-panel">
                     <div class="control-group">
                         <label>Cantidad de Apuesta (S/)</label>
-                        <input type="number" v-model="betAmount" min="0.10" step="0.10">
+                        <input type="number" v-model.number="betAmount" min="0.10" step="0.10">
                         <div class="quick-bets">
                             <button @click="setBet(0.10)">0.10</button>
                             <button @click="setBet(1.00)">1.00</button>
@@ -263,6 +292,9 @@ onMounted(() => {
 
                     <div class="bet-limits">
                         <p>Apuesta mín: S/ 0.10 | Apuesta máx: S/ 10,000</p>
+                        <p style="margin-top: 5px; font-size: 0.8rem;">
+                            💡 Mueve el slider para cambiar el objetivo
+                        </p>
                     </div>
                 </div>
             </div>
@@ -290,12 +322,12 @@ onMounted(() => {
                         </tr>
                         <tr v-for="bet in gameHistory" :key="bet.id">
                             <td>{{ formatDate(bet.created_at) }}</td>
-                            <td>S/ {{ typeof bet.bet_amount === 'number' ? bet.bet_amount.toFixed(2) : parseFloat(bet.bet_amount || 0).toFixed(2) }}</td>
-                            <td>{{ bet.target_number.toFixed(2) }} {{ bet.direction === 'under' ? '⬇' : '⬆' }}</td>
-                            <td>{{ bet.result_number.toFixed(2) }}</td>
-                            <td>{{ bet.multiplier.toFixed(2) }}x</td>
+                            <td>S/ {{ safeToFixed(bet.bet_amount) }}</td>
+                            <td>{{ safeToFixed(bet.target_number) }} {{ bet.direction === 'under' ? '⬇' : '⬆' }}</td>
+                            <td>{{ safeToFixed(bet.result_number) }}</td>
+                            <td>{{ safeToFixed(bet.multiplier) }}x</td>
                             <td :style="{ color: bet.is_win ? '#00ff88' : '#ff4444' }">
-                                {{ bet.is_win ? '+' : '' }} S/ {{ bet.profit.toFixed(2) }}
+                                {{ bet.is_win ? '+' : '' }} S/ {{ safeToFixed(bet.profit) }}
                             </td>
                             <td>
                                 <span class="win-badge" :class="{ win: bet.is_win, loss: !bet.is_win }">
@@ -310,24 +342,33 @@ onMounted(() => {
             <!-- Popup de resultado -->
             <div v-if="showResult" class="result-popup" :class="{ win: resultData?.is_win, loss: !resultData?.is_win }">
                 <h2>{{ resultData?.is_win ? '🎉 ¡GANASTE!' : '😢 PERDISTE' }}</h2>
-                <div>Resultado: <span class="result-number">{{ resultData?.result_number.toFixed(2) }}</span></div>
+                <div>Resultado: <span class="result-number">{{ safeToFixed(resultData?.result_number) }}</span></div>
                 <div 
                     class="profit" 
                     :style="{ color: resultData?.is_win ? '#00ff88' : '#ff4444' }"
                 >
-                    {{ resultData?.is_win ? '+' : '-' }} S/ {{ Math.abs(resultData?.profit || 0).toFixed(2) }}
+                    {{ resultData?.is_win ? '+' : '-' }} S/ {{ safeToFixed(Math.abs(resultData?.profit || 0)) }}
                 </div>
                 <button class="play-button" @click="closeResult">Continuar</button>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </div>
 </template>
 
 <style scoped>
+* {
+    box-sizing: border-box;
+}
+
+.game-wrapper {
+    min-height: 100vh;
+    background: #1a1d29;
+    padding: 20px;
+}
+
 .game-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
     color: #fff;
 }
 
@@ -386,6 +427,7 @@ onMounted(() => {
     font-size: 6rem;
     font-weight: bold;
     text-shadow: 0 0 30px rgba(255,255,255,0.5);
+    transition: all 0.3s ease;
 }
 
 .dice-rolling .dice-number {
@@ -422,15 +464,18 @@ onMounted(() => {
 .multiplier-value {
     font-size: 1.5rem;
     color: #ffd700;
+    font-weight: bold;
 }
 
 input[type="range"] {
     width: 100%;
     height: 8px;
     border-radius: 5px;
-    background: #1a1d29;
+    background: linear-gradient(to right, #00ff88 0%, #00ff88 50%, #1a1d29 50%, #1a1d29 100%);
     outline: none;
     -webkit-appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -440,7 +485,23 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     background: #00ff88;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(0,255,136,0.5);
+    box-shadow: 0 0 15px rgba(0,255,136,0.8);
+    transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 25px rgba(0,255,136,1);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #00ff88;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 15px rgba(0,255,136,0.8);
 }
 
 .direction-toggle {
@@ -461,9 +522,14 @@ input[type="range"]::-webkit-slider-thumb {
     transition: all 0.3s;
 }
 
+.direction-btn:hover {
+    transform: translateY(-2px);
+}
+
 .direction-btn.active {
     background: #00ff88;
     color: #1a1d29;
+    box-shadow: 0 5px 20px rgba(0,255,136,0.4);
 }
 
 .win-chance {
@@ -525,6 +591,7 @@ input[type="range"]::-webkit-slider-thumb {
 .quick-bets button:hover {
     background: #00ff88;
     color: #1a1d29;
+    transform: scale(1.05);
 }
 
 .play-button {
@@ -549,6 +616,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: #333;
     color: #666;
     cursor: not-allowed;
+    transform: none;
 }
 
 .bet-limits {
@@ -615,7 +683,7 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 20px;
     text-align: center;
     z-index: 1000;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
 }
 
 .result-popup.win {

@@ -15,6 +15,7 @@ use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\DiceGameController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\CrashController;
+use App\Http\Controllers\SlotGameController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -146,6 +147,15 @@ Route::middleware(['auth'])->group(function () {
     
     // Historial de apuestas
     Route::get('/dice/history', [DiceGameController::class, 'history'])->name('dice.history');
+    
+});
+Route::middleware(['auth'])->group(function () {
+    
+    // Página del juego Tragamonedas
+    Route::get('/tragamonedas', [SlotGameController::class, 'index'])->name('tragamonedas.index');
+    
+    // API para girar (mantenemos /slots/spin para no romper el JS)
+    Route::post('/slots/spin', [SlotGameController::class, 'spin'])->name('slots.spin');
     
 });
 
