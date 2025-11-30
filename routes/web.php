@@ -14,6 +14,8 @@ use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\CrashController;
+use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\Admin\GameController; 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -94,27 +96,36 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// ========== PERFIL DE USUARIO ==========
+// ========== GRUPO: PERFIL DE USUARIO Y DATOS AJAX ==========
 Route::middleware('auth')->group(function () {
 
-    // Ver perfil
+    // Rutas de edición de perfil (Se mantienen)
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-
-    // Editar perfil
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Guardar avatar elegido
-    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])
-        ->name('profile.select-avatar');
+    // Rutas de actualización de perfil
+    Route::post('/profile/select-avatar', [ProfileController::class, 'selectAvatar'])->name('profile.select-avatar');
+    Route::post('/profile/select-banner', [ProfileController::class, 'selectBanner'])->name('profile.select-banner');
+    Route::post('/profile/update-bio', [ProfileController::class, 'updateBio'])->name('profile.update-bio');
+
+    // Rutas de Juego Favorito (Se mantienen)
+    Route::post('/profile/set-favorite-game', [ProfileController::class, 'setFavoriteGame'])->name('profile.set-favorite-game');
+    Route::get('/profile/favorite-game', [ProfileController::class, 'getFavoriteGame'])->name('profile.get-favorite-game');
+    Route::post('/profile/update-favorite-stats', [ProfileController::class, 'updateFavoriteGameStats'])->name('profile.update-favorite-stats');
+
+    // 🌟 RUTAS DE DATOS DE PERFIL (CORREGIDAS)
+    // Usamos el controlador de logros para los logros y el de perfil para actividades
     
-    // ⬇️⬇️⬇️ AGREGAR ESTAS DOS RUTAS NUEVAS ⬇️⬇️⬇️
-    Route::post('/profile/select-banner', [ProfileController::class, 'selectBanner'])
-        ->name('profile.select-banner');
+    // Logros (Apuntan al AchievementController)
+    Route::get('/user-data/achievements', [AchievementController::class, 'getUserAchievements'])->name('user.achievements.json');
     
-    Route::post('/profile/update-bio', [ProfileController::class, 'updateBio'])
-        ->name('profile.update-bio');
+    // Actividades (Apuntan al ProfileController para simplicidad, o al ActivityController si existe)
+    Route::get('/user-data/activities', [ProfileController::class, 'getActivitiesJson'])->name('user.activities.json');
+
+    // Desbloquear logro manualmente (Apuntan al AchievementController)
+    Route::post('/api/achievements/{key}/unlock', [AchievementController::class, 'unlock'])->name('api.unlock-achievement');
 });
 
 // Wallet
@@ -149,6 +160,8 @@ Route::get('/settings', function () {
     return inertia('Settings');
 })->middleware('auth')->name('settings');
 
+// Esta ruta debe estar protegida para que solo usuarios autenticados puedan usarla
+Route::middleware('auth:sanctum')->post('/game/simulate-win', [GameController::class, 'simulateWin']);
 
 // ========== CRASH GAME ==========
 // HIGH FLYER GAME
@@ -164,6 +177,38 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/games/high-flyer/start', [HighFlyerController::class, 'startGame']);
     Route::post('/games/high-flyer/cashout', [HighFlyerController::class, 'cashOut']);
     Route::post('/games/high-flyer/crash', [HighFlyerController::class, 'gameCrashed']);
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    // ========== RUTAS DE LOGROS ==========
+    Route::get('/api/user/achievements', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return app(App\Http\Controllers\AchievementController::class)->getUserAchievements($user);
+    })->name('api.achievements');
+
+    // ========== RUTAS DE ACTIVIDAD ==========
+    Route::get('/api/user/activities', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $activities = $user->activities()->limit(20)->get();
+        return response()->json(['activities' => $activities]);
+    })->name('api.activities');
+
+    // ========== RUTAS DE JUEGO FAVORITO ==========
+    Route::post('/profile/set-favorite-game', [ProfileController::class, 'setFavoriteGame'])
+        ->name('profile.set-favorite-game');
+
+    Route::get('/profile/favorite-game', [ProfileController::class, 'getFavoriteGame'])
+        ->name('profile.get-favorite-game');
+
+    Route::post('/profile/update-favorite-stats', [ProfileController::class, 'updateFavoriteGameStats'])
+        ->name('profile.update-favorite-stats');
+
+    // ========== DESBLOQUEAR LOGRO MANUALMENTE ==========
+    Route::post('/api/achievements/{key}/unlock', function ($key) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return app(App\Http\Controllers\AchievementController::class)->unlock($user, $key);
+    })->name('api.unlock-achievement');
 });
 
 require __DIR__.'/auth.php';

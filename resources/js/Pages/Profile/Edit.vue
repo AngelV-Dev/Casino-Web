@@ -15,6 +15,43 @@ const props = defineProps({
 const page = usePage();
 const user = page.props.auth.user;
 
+// --- INICIO CÓDIGO FUSIONADO (Juego Favorito) ---
+
+const games = [
+    { key: 'high_flyer', name: 'High Flyer ✈️', image: '/images/slots/high.png' },
+    { key: 'crash', name: 'Crash 💥', image: '/images/slots/crash.png' },
+    { key: 'mines', name: 'Mines 💣', image: '/images/slots/minas.png' },
+    { key: 'plinko', name: 'Plinko ⚪', image: '/images/slots/plinko.png' },
+    { key: 'wheel', name: 'Wheel 🎡', image: '/images/slots/wheel.png' },
+    { key: 'gates_olympus', name: 'Gates Olympus 🏛️', image: '/images/slots/olimpus.png' },
+    { key: 'sugar_rush', name: 'Sugar Rush 🍭', image: '/images/slots/sugar.png' },
+];
+
+const selectedGame = ref(null);
+
+function saveFavoriteGame() {
+    if (!selectedGame.value) {
+        alert('Por favor selecciona un juego');
+        return;
+    }
+
+    const game = games.find(g => g.key === selectedGame.value);
+    
+    router.post('/profile/set-favorite-game', {
+        game_key: game.key,
+        game_name: game.name,
+        game_image: game.image,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedGame.value = null;
+        }
+    });
+}
+
+// --- FIN CÓDIGO FUSIONADO (Juego Favorito) ---
+
+
 // Banners según rol
 const roleBanners = {
     super_admin: { color: "bg-red-500", label: "SUPER ADMIN" },
@@ -178,6 +215,42 @@ function scrollToAvatarSelector() {
                 
                 <div class="lg:col-span-1 space-y-6">
                     
+                    <div class="bg-[#1a1d24] border border-gray-800 rounded-2xl p-6 shadow-2xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-lime-500 flex items-center gap-2">
+                                <i class="fas fa-star"></i>
+                                Juego Favorito
+                            </h3>
+                            <span class="text-2xl">🎮</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-6">
+                            <div
+                                v-for="game in games"
+                                :key="game.key"
+                                @click="selectedGame = game.key"
+                                class="cursor-pointer rounded-xl overflow-hidden border-2 transition transform hover:scale-105"
+                                :class="selectedGame === game.key 
+                                    ? 'border-lime-500 shadow-[0_0_20px_rgba(132,204,22,0.6)] scale-105' 
+                                    : 'border-gray-700 hover:border-lime-500/50'"
+                            >
+                                <div class="aspect-square bg-gray-700 flex items-center justify-center relative overflow-hidden">
+                                    <img :src="game.image" :alt="game.name" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center text-center p-2">
+                                        <p class="text-xs font-bold text-white drop-shadow">{{ game.name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            @click="saveFavoriteGame"
+                            :disabled="!selectedGame"
+                            class="w-full px-4 py-3 rounded-xl bg-lime-500 hover:bg-lime-400 text-black font-bold shadow-lg transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <i class="fas fa-save mr-2"></i>Establecer Favorito
+                        </button>
+                    </div>
                     <div id="avatar-selector" class="bg-[#1a1d24] border border-gray-800 rounded-2xl p-6 shadow-2xl">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-bold text-lime-500 flex items-center gap-2">
