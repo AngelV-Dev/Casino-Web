@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SlotBet;
+use App\Models\Transaction; // ⬅️ 1. Importar el modelo Transaction
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,9 @@ class SlotGameController extends Controller
     {
         $user = Auth::user();
         
+        // Comprobar si el usuario tiene una wallet, si no, se creará en getUserBalance
+        $balance = $this->getUserBalance($user); 
+
         $history = SlotBet::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->limit(20)
@@ -52,8 +56,9 @@ class SlotGameController extends Controller
                     'bet_amount' => (float) $bet->bet_amount,
                     'lines' => $bet->lines,
                     'total_bet' => (float) $bet->total_bet,
-                    'result' => $bet->result,
-                    'winning_lines' => $bet->winning_lines,
+                    // Aseguramos que result y winning_lines sean strings/arrays correctos
+                    'result' => is_string($bet->result) ? json_decode($bet->result, true) : $bet->result, 
+                    'winning_lines' => is_string($bet->winning_lines) ? json_decode($bet->winning_lines, true) : $bet->winning_lines,
                     'multiplier' => (float) $bet->multiplier,
                     'payout' => (float) $bet->payout,
                     'profit' => (float) $bet->profit,
@@ -64,7 +69,7 @@ class SlotGameController extends Controller
         
         return Inertia::render('Tragamonedas', [
             'user' => $user,
-            'balance' => (float) $this->getUserBalance($user),
+            'balance' => (float) $balance,
             'history' => $history,
             'symbols' => array_keys($this->symbols),
             'payouts' => $this->payouts
@@ -92,9 +97,13 @@ class SlotGameController extends Controller
             }
 
             $totalBet = $validated['bet_amount'] * $validated['lines'];
-            $currentBalance = $this->getUserBalance($user);
             
-            if ($currentBalance < $totalBet) {
+            // 2. Obtener saldo (esto asegura que $user->wallet exista si no existía)
+            $currentBalanceBeforeBet = $this->getUserBalance($user);
+            // 3. Asignar la wallet para las transacciones
+            $wallet = $user->wallet; 
+            
+            if ($currentBalanceBeforeBet < $totalBet) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Saldo insuficiente. Necesitas S/ ' . number_format($totalBet, 2)
@@ -120,14 +129,14 @@ class SlotGameController extends Controller
             $profit = $payout - $totalBet;
             $isWin = $multiplier > 0;
             
-            // Crear registro
+            // Crear registro de apuesta
             $bet = SlotBet::create([
                 'user_id' => $user->id,
                 'bet_amount' => $validated['bet_amount'],
                 'lines' => $validated['lines'],
                 'total_bet' => $totalBet,
-                'result' => $result,
-                'winning_lines' => $winningData['lines'],
+                'result' => json_encode($result), // Guardar como JSON string
+                'winning_lines' => json_encode($winningData['lines']), // Guardar como JSON string
                 'multiplier' => $multiplier,
                 'payout' => $payout,
                 'profit' => $profit,
@@ -137,11 +146,51 @@ class SlotGameController extends Controller
                 'nonce' => $nonce
             ]);
             
-            // Actualizar saldo
-            $newBalance = $this->updateUserBalance($user, -$totalBet + $payout);
+            // ===============================================
+            // 💰 LÓGICA DE TRANSACCIONES DETALLADAS
+            // ===============================================
+            
+            // 1. REGISTRAR DEDUCCIÓN DE APUESTA (WITHDRAW)
+            $balanceAfterWithdraw = $currentBalanceBeforeBet - $totalBet;
+            
+            $this->createWalletTransaction(
+                $user->id,
+                $wallet->id,
+                'withdraw',
+                $totalBet,
+                'Apuesta en Slot Game', 
+                $currentBalanceBeforeBet,
+                $balanceAfterWithdraw
+            );
+            
+            $newBalance = $balanceAfterWithdraw; 
+
+            // 2. REGISTRAR GANANCIA (WIN), SOLO SI GANÓ
+            if ($isWin) {
+                $winAmount = $payout; 
+                
+                $balanceAfterWin = $balanceAfterWithdraw + $winAmount;
+
+                $this->createWalletTransaction(
+                    $user->id,
+                    $wallet->id,
+                    'win',
+                    $winAmount,
+                    'Ganancia en Slot Game (Payout)',
+                    $balanceAfterWithdraw,
+                    $balanceAfterWin
+                );
+                
+                $newBalance = $balanceAfterWin;
+            }
+            
+            // 3. ACTUALIZAR SALDO FINAL EN LA WALLET
+            $user->wallet->balance = $newBalance;
+            $user->wallet->save(); 
             
             DB::commit();
             
+            // Devolver la respuesta JSON de éxito
             return response()->json([
                 'success' => true,
                 'result' => [
@@ -178,6 +227,71 @@ class SlotGameController extends Controller
             ], 500);
         }
     }
+    
+    // ========================================
+    // MÉTODOS PRIVADOS DE LÓGICA DEL JUEGO Y AUXILIARES
+    // ========================================
+
+    /**
+     * Crea un registro de transacción de wallet (usando el modelo Transaction)
+     */
+    private function createWalletTransaction($userId, $walletId, $type, $amount, $description, $balanceBefore, $balanceAfter)
+    {
+        // ⬅️ 3. Método auxiliar para registrar la transacción
+        Transaction::create([
+            'user_id' => $userId,
+            'wallet_id' => $walletId,
+            'type' => $type, // 'withdraw' o 'win'
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'description' => $description,
+            'reference' => null, 
+            'status' => 'completed',
+        ]);
+    }
+
+    /**
+     * Obtiene el saldo del usuario
+     */
+    private function getUserBalance($user)
+    {
+        if (!$user->wallet) {
+            // Creamos la wallet si no existe
+            $user->wallet()->create([
+                'balance' => 0.00,
+                'currency' => 'USD'
+            ]);
+        }
+        
+        return $user->wallet->balance;
+    }
+
+    /**
+     * Actualiza el saldo del usuario (Esta función ya no se usa, ya que la lógica de transacciones la reemplazó)
+     */
+    /*
+    private function updateUserBalance($user, $amount)
+    {
+        if (!$user->wallet) {
+            throw new \Exception('El usuario no tiene una wallet');
+        }
+        
+        $user->wallet->balance += $amount;
+        $user->wallet->save();
+        
+        return $user->wallet->balance;
+    }
+    */
+    
+    /**
+     * Genera un seed aleatorio
+     */
+    private function generateSeed($length)
+    {
+        return bin2hex(random_bytes($length));
+    }
+
 
     /**
      * Genera matriz de símbolos 3x3
@@ -189,6 +303,7 @@ class SlotGameController extends Controller
         for ($reel = 0; $reel < 3; $reel++) {
             $reels[$reel] = [];
             for ($row = 0; $row < 3; $row++) {
+                // Modificación del hash para asegurar que cada posición sea única
                 $hash = hash_hmac('sha256', "{$clientSeed}:{$nonce}:{$reel}:{$row}", $serverSeed);
                 $symbol = $this->getSymbolFromHash($hash);
                 $reels[$reel][$row] = $symbol;
@@ -244,7 +359,8 @@ class SlotGameController extends Controller
             
             // Si los 3 símbolos son iguales
             if ($symbol1 === $symbol2 && $symbol2 === $symbol3) {
-                $winningLines[] = $pattern;
+                // La línea ganadora se añade como el índice del patrón
+                $winningLines[] = array_keys($linePatterns[$lines], $pattern)[0] + 1; 
                 $totalMultiplier += $this->payouts[$symbol1];
             }
         }
@@ -253,43 +369,5 @@ class SlotGameController extends Controller
             'lines' => $winningLines,
             'multiplier' => $totalMultiplier
         ];
-    }
-
-    /**
-     * Obtiene el saldo del usuario
-     */
-    private function getUserBalance($user)
-    {
-        if (!$user->wallet) {
-            $user->wallet()->create([
-                'balance' => 0.00,
-                'currency' => 'USD'
-            ]);
-        }
-        
-        return $user->wallet->balance;
-    }
-
-    /**
-     * Actualiza el saldo del usuario
-     */
-    private function updateUserBalance($user, $amount)
-    {
-        if (!$user->wallet) {
-            throw new \Exception('El usuario no tiene una wallet');
-        }
-        
-        $user->wallet->balance += $amount;
-        $user->wallet->save();
-        
-        return $user->wallet->balance;
-    }
-
-    /**
-     * Genera un seed aleatorio
-     */
-    private function generateSeed($length)
-    {
-        return bin2hex(random_bytes($length));
     }
 }

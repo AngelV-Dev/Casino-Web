@@ -1,19 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AppLayout from "@/Layouts/AppLayout.vue";
-import { useAuthStore } from '@/stores/authStore'; // IMPORTAR STORE
-import axios from 'axios'; // USAR AXIOS EN LUGAR DE router.post
-
-// ✅ Usar el store en lugar de balance local
-const authStore = useAuthStore();
-
-// ✅ Balance reactivo desde el store
-const balance = computed(() => authStore.balance);
-
-
-
-let gameInterval = null;
 
 const props = defineProps({
     user: Object,
@@ -31,7 +18,7 @@ const currentBalance = ref(parseFloat(props.balance) || 0);
 const gameHistory = ref(props.history || []);
 const autoSpin = ref(false);
 const autoSpinCount = ref(0);
-const autoSpinMax = ref(10); // Máximo de giros automáticos
+const autoSpinMax = ref(10);
 
 // Resultado de los rodillos
 const reels = ref([
@@ -44,15 +31,17 @@ const reels = ref([
 const showResult = ref(false);
 const resultData = ref(null);
 
+// Variable para el interval (CRÍTICO: solo una instancia)
+let spinInterval = null;
+
 // Apuesta total
 const totalBet = computed(() => {
-    // Asegurarse de que el cálculo siempre use números
-    return (parseFloat(betAmount.value || 0) * lines.value).toFixed(2);
+    return (parseFloat(betAmount.value) * lines.value).toFixed(2);
 });
 
-// Ganancia potencial (estimado)
+// Ganancia potencial
 const potentialWin = computed(() => {
-    return (parseFloat(totalBet.value || 0) * 10).toFixed(2); // Promedio x10
+    return (parseFloat(totalBet.value) * 10).toFixed(2);
 });
 
 // Apuestas rápidas
@@ -61,54 +50,86 @@ const setBet = (amount) => {
 };
 
 const doubleBet = () => {
-    // Evita valores que no son números y asegura el límite superior
-    let newBet = parseFloat(betAmount.value || 0) * 2;
-    if (newBet > 1000) newBet = 1000;
-    betAmount.value = newBet.toFixed(2);
+    betAmount.value = (parseFloat(betAmount.value) * 2).toFixed(2);
 };
 
 const setLines = (count) => {
     lines.value = count;
 };
 
+// FUNCIÓN CRÍTICA: Detener animación
+const stopSpinAnimation = () => {
+    console.log('🛑 Deteniendo animación...');
+    if (spinInterval) {
+        clearInterval(spinInterval);
+        spinInterval = null;
+        console.log('✅ Animación detenida');
+    }
+};
+
+// Función para generar símbolo aleatorio
+const randomSymbol = (symbols) => {
+    return symbols[Math.floor(Math.random() * symbols.length)];
+};
+
+// FUNCIÓN CRÍTICA: Iniciar animación
+const startSpinAnimation = () => {
+    console.log('▶️ Iniciando animación...');
+    
+    // PRIMERO: Detener cualquier animación previa
+    stopSpinAnimation();
+    
+    const allSymbols = props.symbols;
+    
+    // SEGUNDO: Crear nueva animación
+    spinInterval = setInterval(() => {
+        reels.value = [
+            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)],
+            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)],
+            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)]
+        ];
+    }, 100);
+};
+
 // Función principal de SPIN
 const spin = async () => {
-    // Si ya está girando, ignorar (importante para evitar múltiples llamadas en auto-spin)
-    if (isSpinning.value) return;
+    console.log('🎰 SPIN LLAMADO', { 
+        isSpinning: isSpinning.value, 
+        autoSpin: autoSpin.value 
+    });
 
-    const bet = parseFloat(betAmount.value || 0);
-    const total = parseFloat(totalBet.value || 0);
+    // BLOQUEO: Si ya está girando, NO hacer nada
+    if (isSpinning.value) {
+        console.log('⚠️ Ya está girando, bloqueando...');
+        return;
+    }
 
-    // Validaciones (Movidas al inicio para detener el flujo inmediatamente)
+    const bet = parseFloat(betAmount.value);
+    const total = parseFloat(totalBet.value);
+
+    // Validaciones
     if (bet < 0.10) {
         alert('La apuesta mínima es S/ 0.10');
-        autoSpin.value = false;
         return;
     }
 
     if (bet > 1000) {
         alert('La apuesta máxima por línea es S/ 1,000');
-        autoSpin.value = false;
         return;
     }
 
     if (total > currentBalance.value) {
         alert('Saldo insuficiente');
-        autoSpin.value = false; // Detener auto-spin si no hay saldo
-        return;
-    }
-    
-    // Si se alcanzó el límite de auto-spin, no girar
-    if (autoSpin.value && autoSpinCount.value >= autoSpinMax.value) {
         autoSpin.value = false;
         autoSpinCount.value = 0;
-        alert('Auto-spin completado: ' + autoSpinMax.value + ' giros');
         return;
     }
 
+    // MARCAR como girando
     isSpinning.value = true;
+    console.log('✅ Iniciando giro...');
 
-    // Animación de giro
+    // Iniciar animación
     startSpinAnimation();
 
     try {
@@ -126,63 +147,63 @@ const spin = async () => {
 
         const data = await response.json();
 
-        authStore.setBalance(data.result.new_balance);
+        if (data.success) {
+            console.log('✅ Respuesta recibida:', data.result);
 
-        // **Pausa para la animación visual**
-        setTimeout(() => {
-            // **Detener la animación del setInterval**
-            stopSpinAnimation();
-
-            if (data.success) {
+            // Esperar 2 segundos para efecto visual
+            setTimeout(() => {
+                // CRÍTICO: Detener animación INMEDIATAMENTE
+                stopSpinAnimation();
+                
+                // Mostrar resultado real
                 reels.value = data.result.reels;
                 currentBalance.value = parseFloat(data.result.new_balance);
                 
-                // Mostrar resultado después de un momento
+                // Después de 500ms mostrar popup
                 setTimeout(() => {
                     if (data.result.is_win) {
                         resultData.value = data.result;
                         showResult.value = true;
                         
-                        // Si está en auto-spin, cerrar popup automáticamente después de 2 segundos
+                        // Auto-cerrar popup si está en auto-spin
                         if (autoSpin.value) {
                             setTimeout(() => {
                                 showResult.value = false;
-                            }, 2000);
+                            }, 1500);
                         }
                     }
                     
+                    // Agregar al historial
                     addToHistory(data.result);
                     
-                    // **El spin ha terminado: permitir el siguiente giro/botón**
+                    // CRÍTICO: DESMARCAR como girando
                     isSpinning.value = false;
+                    console.log('🏁 Giro completado');
 
-                    // Lógica de Auto-spin continuo
-                    if (autoSpin.value) {
+                    // Auto-spin continuo
+                    if (autoSpin.value && autoSpinCount.value < autoSpinMax.value) {
                         autoSpinCount.value++;
-                        // Si no se ha alcanzado el límite, programar el siguiente spin
-                        if (autoSpinCount.value < autoSpinMax.value) {
-                            setTimeout(() => spin(), 1500); // Esperar 1.5s antes del siguiente spin
-                        } else {
-                            // Se alcanzó el límite: detener auto-spin
-                            autoSpin.value = false;
-                            autoSpinCount.value = 0;
-                            alert('Auto-spin completado: ' + autoSpinMax.value + ' giros');
-                        }
+                        console.log(`🔄 Auto-spin: ${autoSpinCount.value}/${autoSpinMax.value}`);
+                        setTimeout(() => spin(), 1000);
+                    } else if (autoSpin.value && autoSpinCount.value >= autoSpinMax.value) {
+                        autoSpin.value = false;
+                        autoSpinCount.value = 0;
+                        console.log('✅ Auto-spin completado');
+                        alert('Auto-spin completado: ' + autoSpinMax.value + ' giros');
                     }
                 }, 500);
-            } else {
-                alert(data.message || 'Error al procesar el spin');
-                stopSpinAnimation();
-                isSpinning.value = false;
-                autoSpin.value = false; // Detener auto-spin si hay error del servidor
-            }
-
-        }, 2000); // Duración de la animación visual
+            }, 2000);
+        } else {
+            console.error('❌ Error del servidor:', data.message);
+            alert(data.message || 'Error al procesar el spin');
+            stopSpinAnimation();
+            isSpinning.value = false;
+            autoSpin.value = false;
+        }
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error de conexión:', error);
         alert('Error de conexión');
-        // Asegurar la detención en caso de error de red/servidor
         stopSpinAnimation();
         isSpinning.value = false;
         autoSpin.value = false;
@@ -190,49 +211,17 @@ const spin = async () => {
     }
 };
 
-// Animación de giro
-let spinInterval = null;
-
-const startSpinAnimation = () => {
-    stopSpinAnimation();
-    
-    // Si props.symbols no es un array, usar un array por defecto
-    const allSymbols = Array.isArray(props.symbols) ? props.symbols : ['🍒', '🍋', '🍊', '⭐', '💎', '🎰', '💰', '7️⃣'];
-    
-    if (allSymbols.length === 0) return;
-    
-    spinInterval = setInterval(() => {
-        reels.value = [
-            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)],
-            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)],
-            [randomSymbol(allSymbols), randomSymbol(allSymbols), randomSymbol(allSymbols)]
-        ];
-    }, 100);
-};
-
-const stopSpinAnimation = () => {
-    if (spinInterval) {
-        clearInterval(spinInterval);
-        spinInterval = null;
-    }
-};
-
-const randomSymbol = (symbols) => {
-    return symbols[Math.floor(Math.random() * symbols.length)];
-};
-
-// Auto-spin
+// Auto-spin toggle
 const toggleAutoSpin = () => {
     if (!autoSpin.value) {
+        console.log('▶️ Activando auto-spin');
         autoSpin.value = true;
-        autoSpinCount.value = 0; // Reiniciar el contador al activar
-        if (!isSpinning.value) {
-            spin(); // Iniciar el primer spin si no hay uno en curso
-        }
+        autoSpinCount.value = 0;
+        spin();
     } else {
-        // Detener inmediatamente si ya está activo
+        console.log('⏸️ Deteniendo auto-spin');
         autoSpin.value = false;
-        // Si estaba girando, el loop de 'spin' lo detectará al terminar y no continuará
+        autoSpinCount.value = 0;
     }
 };
 
@@ -245,14 +234,14 @@ const closeResult = () => {
 const addToHistory = (result) => {
     const newBet = {
         id: Date.now(),
-        bet_amount: parseFloat(betAmount.value || 0),
+        bet_amount: parseFloat(betAmount.value),
         lines: lines.value,
-        total_bet: parseFloat(totalBet.value || 0),
+        total_bet: parseFloat(totalBet.value),
         result: result.reels,
         winning_lines: result.winning_lines,
-        multiplier: parseFloat(result.multiplier || 0),
-        payout: parseFloat(result.payout || 0),
-        profit: parseFloat(result.profit || 0),
+        multiplier: parseFloat(result.multiplier),
+        payout: parseFloat(result.payout),
+        profit: parseFloat(result.profit),
         is_win: result.is_win,
         created_at: new Date().toISOString()
     };
@@ -276,23 +265,24 @@ const formatDate = (date) => {
 // Función segura para formatear números
 const safeToFixed = (value, decimals = 2) => {
     const num = typeof value === 'number' ? value : parseFloat(value || 0);
-    if (isNaN(num)) return (0).toFixed(decimals);
     return num.toFixed(decimals);
 };
 
-// Limpiar al desmontar
+// CRÍTICO: Limpiar al desmontar
 onUnmounted(() => {
+    console.log('🧹 Limpiando componente...');
     stopSpinAnimation();
+    autoSpin.value = false;
 });
 </script>
+
 <template>
-<AppLayout title="Tragamonedas">
-    <Head title="Slot Machine" />
+    <Head title="Tragamonedas" />
     
     <div class="game-wrapper">
         <div class="game-container">
             <div class="game-header">
-                <h1>🎰 SLOT MACHINE</h1>
+                <h1>🎰 TRAGAMONEDAS</h1>
                 <p>Alinea 3 símbolos iguales para ganar</p>
             </div>
 
@@ -343,21 +333,13 @@ onUnmounted(() => {
 
                 <div class="controls-panel">
                     <div class="control-group">
-                        <label for="bet-amount-input">Apuesta por Línea (S/)</label>
-                        <input 
-                            type="number" 
-                            id="bet-amount-input" 
-                            v-model.number="betAmount" 
-                            min="0.10" 
-                            step="0.10" 
-                            :disabled="isSpinning"
-                            placeholder="Monto de apuesta"
-                        >
+                        <label>Apuesta por Línea (S/)</label>
+                        <input type="number" v-model.number="betAmount" min="0.10" step="0.10" :disabled="isSpinning">
                         <div class="quick-bets">
-                            <button @click="setBet(0.10)" :disabled="isSpinning" aria-label="Establecer apuesta a 0.10">0.10</button>
-                            <button @click="setBet(1.00)" :disabled="isSpinning" aria-label="Establecer apuesta a 1.00">1.00</button>
-                            <button @click="setBet(10.00)" :disabled="isSpinning" aria-label="Establecer apuesta a 10.00">10.00</button>
-                            <button @click="doubleBet()" :disabled="isSpinning" aria-label="Duplicar apuesta">2x</button>
+                            <button @click="setBet(0.10)" :disabled="isSpinning">0.10</button>
+                            <button @click="setBet(1.00)" :disabled="isSpinning">1.00</button>
+                            <button @click="setBet(10.00)" :disabled="isSpinning">10.00</button>
+                            <button @click="doubleBet()" :disabled="isSpinning">2x</button>
                         </div>
                     </div>
 
@@ -370,7 +352,6 @@ onUnmounted(() => {
                                 @click="setLines(n)"
                                 :class="{ active: lines === n }"
                                 :disabled="isSpinning"
-                                :aria-label="`Seleccionar ${n} líneas`"
                             >
                                 {{ n }}
                             </button>
@@ -395,7 +376,8 @@ onUnmounted(() => {
                         :class="{ spinning: isSpinning, 'auto-active': autoSpin }"
                     >
                         <span v-if="!isSpinning && !autoSpin">🎰 GIRAR</span>
-                        <span v-else-if="autoSpin">⚡ AUTO-SPIN ACTIVO</span>
+                        <span v-else-if="autoSpin && !isSpinning">⚡ AUTO-SPIN ACTIVO</span>
+                        <span v-else-if="autoSpin && isSpinning">🔄 GIRANDO... ({{ autoSpinCount }}/{{ autoSpinMax }})</span>
                         <span v-else>🔄 GIRANDO...</span>
                     </button>
 
@@ -460,6 +442,7 @@ onUnmounted(() => {
 
             <div v-if="showResult" class="result-popup win">
                 <h2>🎉 ¡GANASTE!</h2>
+                <h2 >❌ PERDISTE</h2>
                 <div class="winning-line">
                     <span v-for="(reel, i) in resultData?.reels" :key="i" class="big-symbol">
                         {{ reel[1] }}
@@ -471,8 +454,8 @@ onUnmounted(() => {
             </div>
         </div>
     </div>
-</AppLayout>
 </template>
+
 <style scoped>
 * {
     box-sizing: border-box;
@@ -501,7 +484,6 @@ onUnmounted(() => {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
 }
 
 .balance-display {
@@ -510,13 +492,11 @@ onUnmounted(() => {
     border-radius: 15px;
     text-align: center;
     margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .balance-display h3 {
     font-size: 1rem;
     margin-bottom: 5px;
-    opacity: 0.9;
 }
 
 .balance-display .amount {
@@ -536,17 +516,12 @@ onUnmounted(() => {
     border: 4px solid #FFD700;
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
-    position: relative;
 }
 
 .lines-indicator {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
-    padding: 10px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
 }
 
 .line-number {
@@ -559,13 +534,11 @@ onUnmounted(() => {
     background: #333;
     color: #666;
     font-weight: bold;
-    transition: all 0.3s;
 }
 
 .line-number.active {
     background: linear-gradient(45deg, #FFD700, #FFA500);
     color: #000;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .reels-container {
@@ -574,13 +547,12 @@ onUnmounted(() => {
     gap: 15px;
     margin-bottom: 30px;
     padding: 20px;
-    background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+    background: #000;
     border-radius: 15px;
-    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
 }
 
 .reel {
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    background: #1a1a1a;
     border: 3px solid #444;
     border-radius: 10px;
     padding: 10px;
@@ -590,17 +562,14 @@ onUnmounted(() => {
 }
 
 .symbol {
-    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    background: #fff;
     padding: 20px;
     border-radius: 10px;
     text-align: center;
     font-size: 3rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s;
 }
 
 .reels-container.spinning .symbol {
-    /* Esta es la animación que se ejecuta mientras isSpinning es TRUE */
     animation: spin-symbol 0.1s linear infinite;
 }
 
@@ -633,11 +602,6 @@ onUnmounted(() => {
     padding: 8px 12px;
     background: rgba(255,255,255,0.05);
     border-radius: 8px;
-    font-size: 0.9rem;
-}
-
-.payout-symbol {
-    font-size: 1.2rem;
 }
 
 .payout-multiplier {
@@ -659,7 +623,6 @@ onUnmounted(() => {
     display: block;
     margin-bottom: 8px;
     color: #a0a0a0;
-    font-size: 0.9rem;
 }
 
 .control-group input {
@@ -670,11 +633,6 @@ onUnmounted(() => {
     border-radius: 10px;
     color: #fff;
     font-size: 1.1rem;
-}
-
-.control-group input:focus {
-    outline: none;
-    border-color: #FFD700;
 }
 
 .quick-bets {
@@ -691,13 +649,11 @@ onUnmounted(() => {
     color: #fff;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s;
 }
 
 .quick-bets button:hover:not(:disabled) {
     background: #FFD700;
     color: #000;
-    transform: scale(1.05);
 }
 
 .lines-selector {
@@ -713,20 +669,13 @@ onUnmounted(() => {
     color: #fff;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 1.1rem;
     font-weight: bold;
-    transition: all 0.3s;
-}
-
-.lines-selector button:hover:not(:disabled) {
-    transform: translateY(-2px);
 }
 
 .lines-selector button.active {
     background: linear-gradient(45deg, #FFD700, #FFA500);
     color: #000;
     border-color: #FFD700;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
 .bet-info {
@@ -740,16 +689,10 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
-.info-row:last-child {
-    margin-bottom: 0;
 }
 
 .value {
     font-weight: bold;
-    color: #fff;
 }
 
 .value.gold {
@@ -766,21 +709,18 @@ onUnmounted(() => {
     font-size: 1.5rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
     margin-bottom: 10px;
+    transition: all 0.3s;
 }
 
 .spin-button:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
 }
 
 .spin-button:disabled {
-    background: #333;
-    color: #666;
+    opacity: 0.7;
     cursor: not-allowed;
-    transform: none;
 }
 
 .spin-button.spinning {
@@ -789,17 +729,11 @@ onUnmounted(() => {
 
 .spin-button.auto-active {
     background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
-    animation: pulse-green 1s infinite;
 }
 
 @keyframes pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.02); }
-}
-
-@keyframes pulse-green {
-    0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3); }
-    50% { transform: scale(1.02); box-shadow: 0 15px 40px rgba(0, 255, 136, 0.6); }
 }
 
 .auto-spin-button {
@@ -809,26 +743,14 @@ onUnmounted(() => {
     border: 2px solid #FFD700;
     border-radius: 12px;
     color: #FFD700;
-    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
     margin-bottom: 15px;
-}
-
-.auto-spin-button:hover {
-    background: rgba(255, 215, 0, 0.1);
-    transform: translateY(-2px);
 }
 
 .auto-spin-button.active {
     background: #FFD700;
     color: #000;
-}
-
-.counter {
-    font-size: 0.9rem;
-    margin-left: 5px;
 }
 
 .bet-limits {
@@ -858,7 +780,6 @@ onUnmounted(() => {
     padding: 12px;
     text-align: left;
     color: #a0a0a0;
-    font-size: 0.9rem;
 }
 
 .history-table td {
@@ -868,10 +789,6 @@ onUnmounted(() => {
 
 .result-symbols {
     font-size: 1.5rem;
-}
-
-.result-symbols span {
-    margin: 0 5px;
 }
 
 .win-badge {
@@ -902,20 +819,13 @@ onUnmounted(() => {
     border-radius: 20px;
     text-align: center;
     z-index: 1000;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     border: 4px solid #FFD700;
-    animation: popIn 0.3s ease-out;
-}
-
-@keyframes popIn {
-    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
 .result-popup h2 {
     font-size: 2.5rem;
-    margin-bottom: 20px;
     color: #FFD700;
+    margin-bottom: 20px;
 }
 
 .winning-line {
@@ -927,12 +837,6 @@ onUnmounted(() => {
 
 .big-symbol {
     font-size: 5rem;
-    animation: bounce 0.5s infinite alternate;
-}
-
-@keyframes bounce {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-10px); }
 }
 
 .multiplier {
