@@ -33,7 +33,23 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user()
-                    ? $request->user()->only('id', 'name', 'email', 'avatar')
+                    ? [
+                        'id' => $request->user()->id,
+                        'name' => $request->user()->name,
+                        'email' => $request->user()->email,
+                        'role' => $request->user()->role ?? 'user',
+                        'avatar' => $request->user()->avatar ?? 'avatar_default.png',
+                        'banner' => $request->user()->banner ?? null,
+                        'bio' => $request->user()->bio ?? '¡Conquistando el casino uno a uno! 🎰',
+                        'balance' => (float) ($request->user()->wallet->balance ?? 0),
+                        'level' => $request->user()->level ?? 1,
+                        'xp' => $request->user()->xp ?? 0,
+                        'xp_next' => $request->user()->xp_next ?? 100,
+                        'games' => $request->user()->games ?? 0,
+                        'wins' => $request->user()->wins ?? 0,
+                        'streak' => $request->user()->streak ?? 0,
+                        'status' => $request->user()->status ?? 'active',
+                    ]
                     : null,
             ],
         ];

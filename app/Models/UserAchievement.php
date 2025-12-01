@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class UserAchievement extends Model
+{
+    protected $fillable = ['user_id', 'achievement_key', 'title', 'description', 'icon', 'unlocked_at'];
+    protected $casts = ['unlocked_at' => 'datetime'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}

@@ -21,6 +21,9 @@ class User extends Authenticatable
         'status',
         'suspension_reason',
         'suspended_at',
+        'avatar',
+        'banner',
+        'bio',
     ];
 
     protected $hidden = [
@@ -303,5 +306,77 @@ class User extends Authenticatable
     public function friendOf()
     {
         return $this->hasMany(Friend::class, 'friend_id');
+    }
+
+    public function achievements()
+    {
+    return $this->hasMany(UserAchievement::class);
+    }
+
+    public function favoriteGame()
+    {
+        return $this->hasOne(UserFavoriteGame::class);
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class)->orderBy('happened_at', 'desc');
+    }
+
+    // ===== MÉTODO: Desbloquear Logro =====
+    public function unlockAchievement($achievementKey, $title, $description, $icon)
+    {
+        // Verificar si ya lo tiene desbloqueado
+        $existing = $this->achievements()->where('achievement_key', $achievementKey)->first();
+        
+        if ($existing) {
+            return $existing; // Ya existe
+        }
+
+    // Crear nuevo logro
+    return $this->achievements()->create([
+        'achievement_key' => $achievementKey,
+        'title' => $title,
+        'description' => $description,
+        'icon' => $icon,
+        'unlocked_at' => now()
+    ]);
+    }
+
+// ===== MÉTODO: Registrar Actividad =====
+public function recordActivity($activityType, $description, $gameName = null, $amount = null, $won = false)
+{
+    return $this->activities()->create([
+        'activity_type' => $activityType,
+        'game_name' => $gameName,
+        'description' => $description,
+        'amount' => $amount,
+        'won' => $won,
+        'happened_at' => now()
+    ]);
+}
+
+// ===== MÉTODO: Establecer Juego Favorito =====
+public function setFavoriteGame($gameKey, $gameName, $gameImage)
+{
+    // Si ya existe, actualizar
+    if ($this->favoriteGame) {
+        $this->favoriteGame()->update([
+            'game_key' => $gameKey,
+            'game_name' => $gameName,
+            'game_image' => $gameImage
+        ]);
+        return $this->favoriteGame;
+    }
+
+    // Si no existe, crear
+    return $this->favoriteGame()->create([
+        'game_key' => $gameKey,
+        'game_name' => $gameName,
+        'game_image' => $gameImage,
+        'hours_played' => 0,
+        'games_played' => 0,
+        'games_won' => 0
+    ]);
     }
 }
