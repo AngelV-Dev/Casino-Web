@@ -17,44 +17,17 @@ const categories = [
 -------------------------- */
 const featuredGames = [
     { 
-        id: 1, 
-        name: 'Angeles & Ladders - Live Casino', 
-        subtitle: 'Prueba nuestro juego Snakes & Ladders en vivo',
-        image: '/images/slots/lines.png',
-        label: 'Promoción',
+        
+        image: '/images/slots/turbo.png',
         btnText: '¡Juega ya!'
     },
-    { 
-        id: 2, 
-        name: '$720,000 con Los 100 del Zeem', 
-        subtitle: 'Juega los hits del Zeem, gana premios y desafíos',
-        image: '/images/slots/zeem.jpg',
-        label: 'Promoción',
-        btnText: '¡Registrate Ya!'
-    },
-    { 
-        id: 3, 
-        name: 'Juego exclusivo: Mines', 
-        subtitle: 'Descubre, juega y conquista tu premio en Mines',
-        image: '/images/slots/mines-feature.jpg',
-        label: 'Exclusivo',
-        btnText: '¡Juega ya!'
-    },
+
 ];
 
-const slotsGames = [
-    { id: 1, name: 'Gates Olympus', image: '/images/slots/olimpus.png' },
-    { id: 2, name: 'Sugar Rush', image: '/images/slots/sugar.png' },
-    { id: 3, name: '20 hot blast', image: '/images/slots/hot.png' },
-    { id: 4, name: 'Shining Crown', image: '/images/slots/shining.png' },
-    { id: 5, name: 'More Lucky & Wild', image: '/images/slots/lucky.png' },
-    { id: 6, name: 'Gates Olympus', image: '/images/slots/olimpus.png' },
-    { id: 7, name: 'Sugar Rush', image: '/images/slots/sugar.png' },
-    { id: 8, name: '20 hot blast', image: '/images/slots/hot.png' },
-];
+
 
 const turboGames = [
-    { id: 1, name: 'Mines', image: '/images/slots/minas.png' },
+    { id: 1, name: 'Crocodile Teeth', image: '/images/slots/Croco.png'  },
     { id: 2, name: 'Plinko', image: '/images/slots/plinko.png' },
     { id: 3, name: 'Wheel', image: '/images/slots/wheel.png' },
     { id: 4, name: 'High Flyer', image: '/images/slots/high.png' },
@@ -88,13 +61,7 @@ const exclusiveGames = [
                 :key="card.id"
                 class="featured-card"
                 :style="{ backgroundImage: `url(${card.image})` }"
-            >
-                <div class="featured-overlay">
-                    <span class="featured-label">{{ card.label }}</span>
-                    <h3 class="featured-title">{{ card.name }}</h3>
-                    <p class="featured-subtitle">{{ card.subtitle }}</p>
-                    <button class="featured-btn">{{ card.btnText }}</button>
-                </div>
+            >     
             </div>
         </div>
 
@@ -129,9 +96,9 @@ const exclusiveGames = [
                 <a 
                     v-for="game in turboGames"
                     :key="game.id"
-                    href="#"
+                    href="/games/crocodile-teeth"
                     class="game-item"
-                    @click.prevent="openWarning"
+                    
                 >
                     <div class="game-image-wrapper">
                         <img :src="game.image" :alt="game.name" class="game-img" />

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -258,17 +258,19 @@ function adjustRedTeeth(amount) {
 </script>
 
 <template>
+<AppLayout title="Crash">
     <Head title="Crocodile Teeth" />
-    
-    <AuthenticatedLayout>
+
         <div class="min-h-screen bg-gradient-to-br from-gray-900 via-green-900 to-gray-900 py-8">
             <div class="max-w-7xl mx-auto px-4">
                 
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <h1 class="text-5xl font-bold text-white mb-2">
-                        🐊 CROCODILE TEETH 🐊
-                    </h1>
+                    <img 
+                    src="/images/logo/Crocodilee-logo.png" 
+                    alt="Crocodile Teeth Logo"
+                    class="mx-auto w-90"
+    >
                     <p class="text-gray-300">Click en los dientes seguros sin tocar los rojos</p>
                     <div class="mt-4 text-3xl font-bold text-green-400">
                         Saldo: S/{{ currentBalance }}
@@ -497,5 +499,5 @@ function adjustRedTeeth(amount) {
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+</AppLayout>
 </template>

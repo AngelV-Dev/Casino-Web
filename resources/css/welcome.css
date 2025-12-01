@@ -15,9 +15,10 @@
 }
 
 /* ===== SIDEBAR ===== */
+
 .sidebar {
     width: 240px;
-    background: #182426;
+    background: hsl(189, 23%, 12%);
     height: 100vh;
     position: fixed;
     left: 0;

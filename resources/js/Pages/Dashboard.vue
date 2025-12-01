@@ -54,7 +54,7 @@ const slotsGames = [
 ];
 
 const turboGames = [
-    { id: 1, name: 'Mines', image: '/images/slots/minas.png' },
+    { id: 1, name: 'Crocodile Teeth', image: '/images/slots/Croco.png'},
     { id: 2, name: 'Plinko', image: '/images/slots/plinko.png' },
     { id: 3, name: 'Wheel', image: '/images/slots/wheel.png' },
     { id: 4, name: 'High Flyer', image: '/images/slots/high.png' },

@@ -10,7 +10,7 @@
 
 .app-container {
     display: flex;
-    background: hsl(270, 93%, 5%);
+    background: #182426;
     min-height: 100vh;
     color: #fff;
 }
@@ -18,7 +18,7 @@
 /* ===== SIDEBAR ===== */
 .sidebar {
     width: 240px;
-    background: #0f0219;
+    background: #182426;
     height: 100vh;
     position: fixed;
     left: 0;
@@ -86,13 +86,13 @@
 
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: #eff70d;
+    color: #1df70d;
 }
 
 .nav-link.active {
-    background: rgba(197, 24, 255, 0.19);
-    color: #f6ff00;
-    border-left: 3px solid #9500ff;
+    background: rgba(113, 124, 111, 0.19);
+    color: #00ff11;
+    border-left: 3px solid #7bff00;
 }
 
 .nav-link i {
@@ -162,7 +162,7 @@
 
 /* ===== HEADER ===== */
 .top-header {
-    background: #160522;
+    background: #182426;
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
@@ -205,7 +205,7 @@
 }
 
 .logo-stake {
-    background: linear-gradient(135deg, rgb(68, 2, 60) 0%, rgb(51, 0, 255) 100%); 
+    background: linear-gradient(135deg, rgb(2, 55, 68) 0%, rgb(51, 0, 255) 100%); 
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -242,7 +242,7 @@
 
 .search-input:focus {
     outline: none;
-    border-color: rgb(255, 0, 111);
+    border-color: rgb(0, 255, 17);
 }
 
 .search-input::placeholder {
@@ -302,7 +302,7 @@
 }
 
 .featured-label {
-    background: #9500ffe5;
+    background: #55ff00e5;
     color: #2a0f2e;
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
@@ -325,7 +325,7 @@
 }
 
 .featured-btn {
-    background: rgb(81, 0, 255);
+    background: rgb(0, 0, 0);
     color: #edf1f4;
     border: none;
     padding: 0.625rem 1.25rem;
@@ -338,7 +338,7 @@
 }
 
 .featured-btn:hover {
-    background: #a200d4;
+    background: #070109;
     transform: scale(1.05);
 }
 
@@ -367,7 +367,7 @@
 }
 
 .category-chip {
-    background: rgb(41, 1, 41);
+    background: rgb(2, 10, 3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.7);
     padding: 0.625rem 1rem;
@@ -388,9 +388,9 @@
 }
 
 .category-chip.active {
-    background: rgba(242, 255, 2, 0.15);
-    border-color: #e1ff00;
-    color: #dccf10;
+    background: rgba(2, 255, 112, 0.15);
+    border-color: #00ff11;
+    color: #50e950;
 }
 
 /* Game Sections */
@@ -415,7 +415,7 @@
 }
 
 .section-icon {
-    color: #f2ff00;
+    color: #44ff00;
 }
 
 .see-all-btn {
@@ -429,7 +429,7 @@
 }
 
 .see-all-btn:hover {
-    color: #ddff00;
+    color: #00ff26;
 }
 
 
@@ -511,7 +511,7 @@
 
 .game-play-icon {
     background: #2b0049;
-    color: #e1e809;
+    color: #09e875;
     border: none;
     width: 50px;
     height: 50px;
@@ -779,7 +779,7 @@
 }
 
 .modal-footer a {
-    color: #570fa4;
+    color: #23b06c;
     font-weight: bold;
 
 }
@@ -807,7 +807,7 @@
 
 /* Items del menú */
 .menu-item {
-    @apply flex items-center gap-3 p-2 rounded hover:bg-[#250B38] cursor-pointer text-[#FFFFFF];
+    @apply flex items-center gap-3 p-2 rounded hover:bg-[#23b06c] cursor-pointer text-[#FFFFFF];
 }
 
 /* Toggle sonidos */
@@ -815,7 +815,7 @@
     appearance: none;
     width: 35px;
     height: 18px;
-    background: #ff3bdb;
+    background: #3bfff5;
     border-radius: 20px;
     position: relative;
     cursor: pointer;
@@ -837,7 +837,7 @@
 /*----------------PIE DE PAGINA-----------------------*/
 /* Contenedor general */
 .footer-container {
-    background: hsl(270, 93%, 5%);
+    background: #182426;
     padding: 50px 20px;
     color: #cfcfcf;
     border-top: 1px solid #292929;
@@ -858,7 +858,7 @@
     color: white;
     font-size: 1.2rem;
     font-weight: bold;
-    border-left: 4px solid #d0ff00;
+    border-left: 4px solid #00ff6a;
     padding-left: 9px;
     margin-bottom: 15px;
 }
@@ -904,8 +904,8 @@
 .footer-social {
     width: 42px;
     height: 42px;
-    background: #362b3a;
-    border: 1px solid #bfee13;
+    background: #2b3a36;
+    border: 1px solid #13ee6b;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -916,8 +916,8 @@
 }
 
 .footer-social:hover {
-    border-color: #eaff00;
-    color: #c3ff00;
+    border-color: #2baf83;
+    color: #00ff51;
     transform: translateY(-3px);
 }
 
@@ -933,19 +933,19 @@
 }
 
 .footer-app-btn:hover {
-    background: #ffe603;
+    background: #03ff74;
 }
 
 /* Libro de reclamaciones */
 .footer-book {
-    color: #f6ff00;
+    color: #d3e6d2;
     text-decoration: none;
     font-weight: bold;
     transition: 0.2s;
 }
 
 .footer-book:hover {
-    color: #e253ff;
+    color: #8cff53;
 }
 
 /* Info final */

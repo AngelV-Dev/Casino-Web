@@ -85,7 +85,7 @@ onUnmounted(() => window.removeEventListener('resize', checkScreenSize));
             }">
 
             <div class="sidebar-header">
-                <h4 class="logo-text">Logo</h4>
+                <h4 class="logo-text"></h4>
 
                 <button class="toggle-btn-desktop" @click="toggleSidebar">
                     <i class="fas" :class="isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
@@ -133,7 +133,7 @@ onUnmounted(() => window.removeEventListener('resize', checkScreenSize));
                     </button>
 
                     <div class="stake-logo">
-                        <img src="/images/logo-celestial.png" alt="Jackpots Celestial" class="logo-stake-img">
+                        <img src="/images/logo-celestiall.png" alt="Jackpots Celestial" class="logo-stake-img">
                     </div>
                 </div>
 
@@ -177,40 +177,8 @@ onUnmounted(() => window.removeEventListener('resize', checkScreenSize));
                                     <span>Billetera</span>
                                 </Link>
 
-                                <div class="menu-item">
-                                    <i class="fas fa-wallet text-gray-600"></i>
-                                    <span>Retirar</span>
-                                </div>
 
-                                <div class="menu-item">
-                                    <i class="fas fa-clock text-gray-600"></i>
-                                    <span>Historial de saldo</span>
-                                </div>
 
-                                <div class="menu-item">
-                                    <i class="fas fa-trophy text-gray-600"></i>
-                                    <span>Mis apuestas deportivas</span>
-                                </div>
-
-                             
-
-                                <div class="menu-item">
-                                    <i class="fas fa-envelope text-gray-600"></i>
-                                    <span>Mis notificaciones</span>
-                                </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-eye-slash text-gray-600"></i>
-                                    <span>Ocultar saldo</span>
-                               </div>
-
-                                <div class="menu-item">
-                                    <i class="fas fa-volume-up text-gray-600"></i>
-                                    <span>Sonidos</span>
-                                    <div class="ml-auto">
-                                        <input type="checkbox" class="toggle" />
-                                    </div>
-                                </div>
 
                                 <!-- CERRAR SESIÓN -->
                                 <button
