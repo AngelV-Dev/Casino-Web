@@ -455,6 +455,88 @@ onUnmounted(() => {
                 </div>
             </div>
         </transition>
+                <!-- MODAL 3: VISA / MASTERCARD (NUEVO) -->
+        <transition name="fade">
+            <div v-if="showRechargeModal && selectedMethod?.name === 'VISA / MASTERCARD'" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="closeRechargeModal"></div>
+
+                <div class="relative bg-gray-900 w-full max-w-xl rounded-3xl border border-gray-700 shadow-2xl overflow-hidden transform transition-all scale-100">
+                    
+                    <div class="relative p-6 text-center border-b border-gray-800">
+                        <button @click="closeRechargeModal" class="absolute left-6 top-6 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-chevron-left text-xl"></i>
+                        </button>
+                        <h3 class="text-xl font-bold text-white">Recarga con Tarjeta</h3>
+                        <button @click="closeRechargeModal" class="absolute right-6 top-6 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-6 md:p-8 overflow-y-auto max-h-[80vh]">
+                        
+                        <div class="flex flex-col items-center mb-8">
+                            <div class="mb-2 text-xs text-gray-400 font-semibold uppercase tracking-wide">Procesador seguro de pagos</div>
+                            <div class="flex gap-4 items-center mb-3">
+                                <div class="text-3xl text-blue-600 font-black">VISA</div>
+                                <div class="text-3xl text-red-600 font-black">Mastercard</div>
+                            </div>
+                            <div class="text-center text-sm text-gray-300 flex items-center gap-2">
+                                <i class="fas fa-lock text-lime-500"></i>
+                                Transacción 100% segura y cifrada.
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Monto a depositar</label>
+                            <div class="grid grid-cols-4 gap-3">
+                                <button @click="selectAmount(50)" :class="activePreset === 50 ? 'bg-red-600 text-white border-red-600' : 'bg-transparent text-gray-400 border-gray-600 hover:border-white'" class="border rounded-lg py-2 font-bold transition text-sm">S/ 50</button>
+                                <button @click="selectAmount(100)" :class="activePreset === 100 ? 'bg-red-600 text-white border-red-600' : 'bg-transparent text-gray-400 border-gray-600 hover:border-white'" class="border rounded-lg py-2 font-bold transition text-sm">S/ 100</button>
+                                <button @click="selectAmount(500)" :class="activePreset === 500 ? 'bg-red-600 text-white border-red-600' : 'bg-transparent text-gray-400 border-gray-600 hover:border-white'" class="w-full border rounded-lg py-2 font-bold transition text-sm">S/ 500</button>
+                                <button @click="selectAmount(1000)" :class="activePreset === 1000 ? 'bg-red-600 text-white border-red-600' : 'bg-transparent text-gray-400 border-gray-600 hover:border-white'" class="w-full border rounded-lg py-2 font-bold transition text-sm">S/ 1000</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 mb-6 pt-4 border-t border-gray-800">
+                            <label class="block text-sm font-bold text-white mb-2">Detalles de la tarjeta (Simulación)</label>
+                            <div class="relative">
+                                <input type="text" class="w-full pl-4 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition text-sm" placeholder="Nombre en la Tarjeta">
+                            </div>
+                            <div class="relative">
+                                <input type="text" maxlength="19" class="w-full pl-4 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition text-sm" placeholder="Número de Tarjeta">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="relative">
+                                    <input type="text" maxlength="5" class="w-full pl-4 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition text-sm" placeholder="MM/AA">
+                                </div>
+                                <div class="relative">
+                                    <input type="text" maxlength="4" class="w-full pl-4 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition text-sm" placeholder="CVC">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex rounded-xl overflow-hidden border border-lime-500 h-14 mb-4 shadow-lg shadow-lime-500/10">
+                            <div class="bg-white flex items-center px-4 text-black font-bold text-lg">S/</div>
+                            <input v-model="depositAmount" type="number" class="flex-1 bg-white text-black text-2xl font-bold focus:outline-none px-2" :placeholder="selectedMethod?.min || '0.00'">
+                            <button @click="deposit" :disabled="modalLoading || !depositAmount || depositAmount < selectedMethod?.min || depositAmount > selectedMethod?.max" class="bg-lime-500 text-black font-bold px-6 hover:bg-lime-400 transition uppercase text-sm tracking-wide disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                <span v-if="!modalLoading">Pagar y Recargar</span>
+                                <span v-else class="flex items-center gap-2">
+                                    <i class="fas fa-spinner animate-spin"></i> Procesando Pago
+                                </span>
+                            </button>
+                        </div>
+
+                        <p class="text-center text-[10px] text-gray-500 mb-8">
+                            Mínimo S/ {{ selectedMethod?.min || '5.00' }} y máximo S/ {{ selectedMethod?.max || '20000.00' }}*
+                        </p>
+
+                        <button @click="closeRechargeModal" class="w-full text-gray-400 hover:text-white text-sm flex items-center justify-center gap-2 transition">
+                            <i class="fas fa-arrow-left"></i> Elegir otro medio de pago
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </transition>
 
     </AppLayout>
 </template>
