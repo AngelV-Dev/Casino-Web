@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DiceBet;
+use App\Models\Transaction; // ⬅️ ¡IMPORTANTE! Asegúrate de que este modelo existe
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -15,35 +16,35 @@ class DiceGameController extends Controller
      * Muestra la página del juego Dice
      */
     public function index()
-{
-    $user = Auth::user();
-    
-    // Obtener historial del usuario y FORMATEAR los datos
-    $history = DiceBet::where('user_id', $user->id)
-        ->orderBy('created_at', 'desc')
-        ->limit(20)
-        ->get()
-        ->map(function ($bet) {
-            return [
-                'id' => $bet->id,
-                'bet_amount' => (float) $bet->bet_amount,
-                'target_number' => (float) $bet->target_number,
-                'direction' => $bet->direction,
-                'result_number' => (float) $bet->result_number,
-                'multiplier' => (float) $bet->multiplier,
-                'profit' => (float) $bet->profit,
-                'payout' => (float) $bet->payout,
-                'is_win' => (bool) $bet->is_win,
-                'created_at' => $bet->created_at->toISOString()
-            ];
-        });
-    
-    return Inertia::render('Dice', [
-        'user' => $user,
-        'balance' => (float) $this->getUserBalance($user),
-        'history' => $history
-    ]);
-}
+    {
+        $user = Auth::user();
+        
+        // Obtener historial del usuario y FORMATEAR los datos
+        $history = DiceBet::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function ($bet) {
+                return [
+                    'id' => $bet->id,
+                    'bet_amount' => (float) $bet->bet_amount,
+                    'target_number' => (float) $bet->target_number,
+                    'direction' => $bet->direction,
+                    'result_number' => (float) $bet->result_number,
+                    'multiplier' => (float) $bet->multiplier,
+                    'profit' => (float) $bet->profit,
+                    'payout' => (float) $bet->payout,
+                    'is_win' => (bool) $bet->is_win,
+                    'created_at' => $bet->created_at->toISOString()
+                ];
+            });
+        
+        return Inertia::render('Dice', [
+            'user' => $user,
+            'balance' => (float) $this->getUserBalance($user),
+            'history' => $history
+        ]);
+    }
 
     /**
      * Procesa una apuesta
@@ -67,8 +68,10 @@ class DiceGameController extends Controller
                 ], 401);
             }
             
-            // Obtener saldo actual
-            $currentBalance = $this->getUserBalance($user);
+            // Obtener saldo actual y wallet ⬅️ DEFINIR VARIABLES AQUI
+            $wallet = $user->wallet;
+            $currentBalanceBeforeBet = $this->getUserBalance($user);
+            $currentBalance = $currentBalanceBeforeBet;
             
             // Verificar saldo suficiente
             if ($currentBalance < $validated['bet_amount']) {
@@ -114,8 +117,47 @@ class DiceGameController extends Controller
                 'nonce' => $nonce
             ]);
             
-            // Actualizar saldo del usuario
-            $newBalance = $this->updateUserBalance($user, -$validated['bet_amount'] + $payout);
+            // ===============================================
+            // 💰 REGISTRO DE TRANSACCIONES DETALLADAS
+            // ===============================================
+            
+            // 1. REGISTRAR DEDUCCIÓN DE APUESTA (WITHDRAW)
+            $balanceAfterWithdraw = $currentBalanceBeforeBet - $validated['bet_amount'];
+            
+            $this->createWalletTransaction(
+                $user->id,
+                $wallet->id,
+                'withdraw',
+                $validated['bet_amount'],
+                'Apuesta en Dice Game', 
+                $currentBalanceBeforeBet,
+                $balanceAfterWithdraw
+            );
+            
+            $newBalance = $balanceAfterWithdraw; // Saldo temporal después del withdraw
+
+            // 2. REGISTRAR GANANCIA (WIN), SOLO SI GANÓ
+            if ($isWin) {
+                $winAmount = $payout; // Usamos el Payout completo para replicar tu imagen (Monto Apostado + Ganancia)
+                
+                $balanceAfterWin = $balanceAfterWithdraw + $winAmount;
+
+                $this->createWalletTransaction(
+                    $user->id,
+                    $wallet->id,
+                    'win',
+                    $winAmount,
+                    'Ganancia en Dice Game (Payout)',
+                    $balanceAfterWithdraw,
+                    $balanceAfterWin
+                );
+                
+                $newBalance = $balanceAfterWin;
+            }
+            
+            // 3. ACTUALIZAR SALDO FINAL EN LA WALLET
+            $user->wallet->balance = $newBalance;
+            $user->wallet->save(); // ⬅️ Sintaxis corregida (sin punto y coma antes)
             
             DB::commit();
             
@@ -130,6 +172,7 @@ class DiceGameController extends Controller
                     'new_balance' => round($newBalance, 2)
                 ]
             ]);
+            
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -173,6 +216,24 @@ class DiceGameController extends Controller
     // ========================================
 
     /**
+     * Crea un registro de transacción de wallet ⬅️ NUEVO MÉTODO
+     */
+    private function createWalletTransaction($userId, $walletId, $type, $amount, $description, $balanceBefore, $balanceAfter)
+    {
+        Transaction::create([
+            'user_id' => $userId,
+            'wallet_id' => $walletId,
+            'type' => $type, // 'withdraw' o 'win'
+            'amount' => $amount,
+            'balance_before' => $balanceBefore,
+            'balance_after' => $balanceAfter,
+            'description' => $description,
+            'reference' => null, 
+            'status' => 'completed',
+        ]);
+    }
+
+    /**
      * Obtiene el saldo del usuario desde la tabla wallets
      */
     private function getUserBalance($user)
@@ -189,7 +250,7 @@ class DiceGameController extends Controller
     }
 
     /**
-     * Actualiza el saldo del usuario en la tabla wallets
+     * Actualiza el saldo del usuario en la tabla wallets ⬅️ ESTE MÉTODO YA NO SE USA DIRECTAMENTE EN PLAY()
      */
     private function updateUserBalance($user, $amount)
     {
