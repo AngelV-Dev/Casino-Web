@@ -1,4 +1,5 @@
+@import "./theme.css"; /* <--- MUEVELO AQUÍ ARRIBA */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "./theme.css";
