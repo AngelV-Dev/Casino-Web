@@ -22,10 +22,21 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+public function down(): void
     {
-    Schema::table('users', function (Blueprint $table) {
-        $table->dropColumn(['level', 'xp', 'xp_next', 'bio']);
-    });
+        Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'level')) {
+                $table->dropColumn('level');
+            }
+            if (Schema::hasColumn('users', 'xp')) {
+                $table->dropColumn('xp');
+            }
+            if (Schema::hasColumn('users', 'xp_next')) {
+                $table->dropColumn('xp_next');
+            }
+            if (Schema::hasColumn('users', 'bio')) {
+                $table->dropColumn('bio');
+            }
+        });
     }
 };
