@@ -41,15 +41,24 @@ const setBet = (amount) => {
   betAmount.value = amount;
 };
 
+<<<<<<< HEAD
 const startGame = async () => {
   if (isFlying.value || isProcessing.value) return;
   
   if (betAmount.value <= 0) {
     showNotification("⚠️ Monto de apuesta inválido", "warning");
+=======
+const startGame = () => {
+  console.log("🎯 DESPEGAR clicked");
+  
+  if (isFlying.value) {
+    console.log("⚠️ Ya está volando");
+>>>>>>> 7e6bd5c07193911589c3763cc50612dae5442d35
     return;
   }
 
   if (betAmount.value > balance.value) {
+<<<<<<< HEAD
     showNotification("⚠️ Fondos insuficientes", "error");
     return;
   }
@@ -111,6 +120,52 @@ const cashOut = async () => {
     isProcessing.value = false;
     isFlying.value = false;
   }
+=======
+    alert("⚠️ Fondos insuficientes");
+    return;
+  }
+
+  // ✅ INICIAR JUEGO DIRECTAMENTE
+  isFlying.value = true;
+  crashed.value = false;
+  multiplierStatus.value = "🛫 Despegando...";
+  
+  console.log("🚀 Juego iniciado");
+  startMultiplier();
+};
+
+const cashOut = () => {
+  console.log("💰 RETIRAR clicked");
+  
+  if (!isFlying.value) {
+    console.log("⚠️ No hay vuelo activo");
+    return;
+  }
+
+  stopMultiplier();
+  
+  const winnings = betAmount.value * multiplier.value;
+  
+  // ✅ MOSTRAR GANANCIA
+  alert(`🎉 ¡Retirado! Ganaste S/ ${winnings.toFixed(2)}`);
+  
+  // Agregar al historial
+  history.value.unshift({
+    value: multiplier.value.toFixed(2),
+    crash: false,
+    win: true,
+    profit: winnings
+  });
+
+  multiplierStatus.value = `💰 Retirado a ${multiplier.value.toFixed(2)}x!`;
+  
+  // Resetear juego
+  setTimeout(() => {
+    resetGame();
+  }, 2000);
+  
+  isFlying.value = false;
+>>>>>>> 7e6bd5c07193911589c3763cc50612dae5442d35
 };
 
 const gameCrashed = async () => {

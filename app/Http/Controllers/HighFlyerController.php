@@ -1,144 +1,123 @@
-<?php
+// Agrega estas variables
+const currentGameId = ref(null);
 
-namespace App\Http\Controllers;
+// startGame actualizado
+const startGame = async () => {
+  if (isFlying.value || isProcessing.value) return;
+  
+  if (betAmount.value <= 0) {
+    showNotification("⚠️ Monto inválido", "warning");
+    return;
+  }
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+  if (betAmount.value > balance.value) {
+    showNotification("⚠️ Fondos insuficientes", "error");
+    return;
+  }
 
-class HighFlyerController extends Controller
-{
-    public function index()
-    {
-        return inertia('HighFlyer');
+  isProcessing.value = true;
+
+  try {
+    const response = await axios.post('/api/high-flyer/start', {
+      bet_amount: betAmount.value
+    });
+
+    if (response.data.success) {
+      // ✅ GUARDAR ID DEL JUEGO
+      currentGameId.value = response.data.game_id;
+      
+      // ✅ ACTUALIZAR BALANCE
+      authStore.setBalance(response.data.new_balance);
+      
+      // Iniciar juego
+      isFlying.value = true;
+      crashed.value = false;
+      multiplierStatus.value = "🛫 Despegando...";
+      startMultiplier();
+      
+      showNotification("🚀 ¡Vuelo iniciado!", "success");
+    } else {
+      showNotification(response.data.message, "error");
     }
+  } catch (error) {
+    console.error('Error:', error);
+    showNotification("Error de conexión", "error");
+  } finally {
+    isProcessing.value = false;
+  }
+};
 
-    public function startGame(Request $request)
-    {
-        try {
-            $request->validate([
-                'bet' => 'required|numeric|min:1',
-            ]);
+// cashOut actualizado
+const cashOut = async () => {
+  if (!isFlying.value || isProcessing.value) return;
 
-            $user = Auth::user();
-            $betAmount = (float) $request->bet;
+  isProcessing.value = true;
+  stopMultiplier();
 
-            // Obtener o crear wallet
-            $wallet = $user->wallet;
-            
-            if (!$wallet) {
-                $wallet = $user->wallet()->create(['balance' => 0]);
-            }
+  try {
+    const response = await axios.post('/api/high-flyer/cashout', {
+      game_id: currentGameId.value,
+      multiplier: multiplier.value.toFixed(2)
+    });
 
-            // Validar saldo suficiente
-            if ($wallet->balance < $betAmount) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Saldo insuficiente'
-                ], 400);
-            }
-
-            // Restar apuesta
-            $wallet->balance -= $betAmount;
-            $wallet->save();
-
-            // ❌ COMENTADO TEMPORALMENTE - Arreglar después
-            /*
-            Transaction::create([
-                'user_id' => $user->id,
-                'type' => 'bet',
-                'amount' => -$betAmount,
-                'description' => 'Apuesta en High Flyer',
-            ]);
-            */
-
-            Log::info('Apuesta realizada', [
-                'user_id' => $user->id,
-                'bet' => $betAmount,
-                'new_balance' => $wallet->balance
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'new_balance' => $wallet->balance,
-                'message' => '¡Vuelo iniciado!'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error en startGame: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno: ' . $e->getMessage()
-            ], 500);
-        }
+    if (response.data.success) {
+      // ✅ ACTUALIZAR BALANCE CON GANANCIAS
+      authStore.setBalance(response.data.new_balance);
+      
+      // Agregar al historial local
+      history.value.unshift({
+        value: multiplier.value.toFixed(2),
+        crash: false,
+        win: true,
+        profit: response.data.payout
+      });
+      
+      multiplierStatus.value = `💰 Retirado a ${multiplier.value.toFixed(2)}x!`;
+      showNotification(`🎉 ¡Ganaste S/ ${response.data.payout}!`, "success");
+      
+      // Resetear
+      setTimeout(() => {
+        resetGame();
+        currentGameId.value = null;
+      }, 2000);
     }
+  } catch (error) {
+    console.error('Error:', error);
+    showNotification("Error al retirar", "error");
+  } finally {
+    isProcessing.value = false;
+    isFlying.value = false;
+  }
+};
 
-    public function cashOut(Request $request)
-    {
-        try {
-            $request->validate([
-                'multiplier' => 'required|numeric|min:1',
-                'winnings' => 'required|numeric|min:0',
-            ]);
+// gameCrashed actualizado
+const gameCrashed = async () => {
+  stopMultiplier();
+  crashed.value = true;
+  isFlying.value = false;
+  multiplierStatus.value = `💥 Crash en ${multiplier.value.toFixed(2)}x`;
 
-            $user = Auth::user();
-            $wallet = $user->wallet;
-            $winnings = (float) $request->winnings;
-
-            if (!$wallet) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Wallet no encontrado'
-                ], 400);
-            }
-
-            // Sumar ganancias
-            $wallet->balance += $winnings;
-            $wallet->save();
-
-            // ❌ COMENTADO TEMPORALMENTE - Arreglar después
-            /*
-            Transaction::create([
-                'user_id' => $user->id,
-                'type' => 'win',
-                'amount' => $winnings,
-                'description' => "Ganancia en High Flyer ({$request->multiplier}x)",
-            ]);
-            */
-
-            Log::info('Cashout exitoso', [
-                'user_id' => $user->id,
-                'winnings' => $winnings,
-                'new_balance' => $wallet->balance
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'new_balance' => $wallet->balance,
-                'message' => '¡Retiro exitoso!'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error en cashOut: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function gameCrashed(Request $request)
-    {
-        Log::info('Juego crashed', [
-            'user_id' => Auth::id(),
-            'crash_at' => $request->crash_at
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Juego terminado'
-        ]);
-    }
-}
+  try {
+    // Notificar al backend del crash
+    await axios.post('/api/high-flyer/crash', {
+      game_id: currentGameId.value,
+      crash_multiplier: multiplier.value.toFixed(2)
+    });
+    
+    history.value.unshift({
+      value: multiplier.value.toFixed(2),
+      crash: true,
+      win: false,
+      profit: -betAmount.value
+    });
+    
+    showNotification(`💥 Crash en ${multiplier.value.toFixed(2)}x`, "error");
+    
+    setTimeout(() => {
+      resetGame();
+      currentGameId.value = null;
+    }, 3000);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
