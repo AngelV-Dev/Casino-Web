@@ -9,25 +9,21 @@ return new class extends Migration {
     {
         Schema::create('game_sessions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('game_id');
+            
+            // Relaciones
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('game_id')->constrained()->cascadeOnDelete();
 
-            $table->decimal('bet_amount', 12, 2)->nullable();
-            $table->decimal('win_amount', 12, 2)->nullable();
+            // Dinero
+            $table->decimal('bet_amount', 12, 2)->default(0);
+            $table->decimal('win_amount', 12, 2)->default(0);
 
-            $table->enum('status', [
-                'active',
-                'finished',
-                'cancelled'
-            ])->default('active');
+            // --- LAS COLUMNAS QUE FALTABAN ---
+            $table->string('result')->default('playing'); // Para que coincida con tu código PHP
+            $table->text('game_data')->nullable();        // Para guardar el JSON de la partida
 
-            $table->timestamp('started_at')->useCurrent();
-            $table->timestamp('finished_at')->nullable();
-
+            // Timestamps
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('game_id')->references('id')->on('games')->onDelete('cascade');
         });
     }
 

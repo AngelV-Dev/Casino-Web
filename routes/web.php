@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\HighFlyerController;
 use Illuminate\Support\Facades\Auth; // Añadido para las funciones anónimas
+use App\Http\Controllers\Games\CrocodileTeethController;
 
 /*
 |--------------------------------------------------------------------------
@@ -222,7 +223,20 @@ Route::middleware(['auth'])->group(function () {
     })->name('api.unlock-achievement-api-call');
 });
 
-
+    // ========== JuejoCrocodileTeeth ==========
+Route::middleware(['auth'])->prefix('games')->group(function () {
+    // Página del juego
+    Route::get('/crocodile-teeth', [CrocodileTeethController::class, 'index'])
+        ->name('games.crocodile-teeth');
+    
+    // API del juego
+    Route::post('/crocodile-teeth/start', [CrocodileTeethController::class, 'startGame'])
+        ->name('games.crocodile-teeth.start');
+    Route::post('/crocodile-teeth/click', [CrocodileTeethController::class, 'clickTooth'])
+        ->name('games.crocodile-teeth.click');
+    Route::post('/crocodile-teeth/cashout', [CrocodileTeethController::class, 'cashOut'])
+        ->name('games.crocodile-teeth.cashout');
+});
 
 /*
 |--------------------------------------------------------------------------
