@@ -1,6 +1,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import AppLayout from "@/Layouts/AppLayout.vue";
+import { useAuthStore } from '@/stores/authStore'; // IMPORTAR STORE
+import axios from 'axios'; // USAR AXIOS EN LUGAR DE router.post
+
+// ✅ Usar el store en lugar de balance local
+const authStore = useAuthStore();
+
+// ✅ Balance reactivo desde el store
+const balance = computed(() => authStore.balance);
+
+
+
+let gameInterval = null;
 
 const props = defineProps({
     user: Object,
@@ -112,6 +125,8 @@ const spin = async () => {
         });
 
         const data = await response.json();
+
+        authStore.setBalance(data.result.new_balance);
 
         // **Pausa para la animación visual**
         setTimeout(() => {
@@ -271,6 +286,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
+<AppLayout title="Tragamonedas">
     <Head title="Slot Machine" />
     
     <div class="game-wrapper">
@@ -455,6 +471,7 @@ onUnmounted(() => {
             </div>
         </div>
     </div>
+</AppLayout>
 </template>
 <style scoped>
 * {

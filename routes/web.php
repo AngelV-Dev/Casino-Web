@@ -136,6 +136,10 @@ Route::middleware(['auth'])->group(function () {
 // GRUPO: JUEGOS (Casino)
 Route::middleware(['auth'])->group(function () {
     // === Rutas de Vistas (Inertia) ===
+    Route::get('/slots', function () {
+        return inertia('Slots');
+    })->name('slots');
+
     Route::get('/crash', function () {
         return inertia('Crash');
     })->name('crash');
@@ -156,9 +160,22 @@ Route::middleware(['auth'])->group(function () {
         return inertia('Settings');
     })->name('settings');
 
-    // === RUTAS DEL JUEGO SLOTS/TRAGAMONEDAS (Unificado) ===
-    Route::get('/slots', [SlotGameController::class, 'index'])->name('slots.index'); // Usamos el controlador para la vista
-    Route::post('/slots/spin', [SlotGameController::class, 'spin'])->name('slots.spin'); // API para girar
+    Route::get('/settings', function () {
+        return inertia('Settings');
+    })->name('settings');
+   
+
+
+    // Página del juego Tragamonedas
+    Route::get('/tragamonedas', [SlotGameController::class, 'index'])
+        ->name('tragamonedas.index');
+
+    // API para girar (se mantiene como /slots/spin)
+    Route::post('/slots/spin', [SlotGameController::class, 'spin'])
+        ->name('slots.spin');
+
+
+
 
     // === RUTAS DEL JUEGO DICE (Unificado) ===
     Route::get('/dice', [DiceGameController::class, 'index'])->name('dice.index'); // Usamos el controlador para la vista
@@ -204,6 +221,8 @@ Route::middleware(['auth'])->group(function () {
         return app(App\Http\Controllers\AchievementController::class)->unlock($user, $key);
     })->name('api.unlock-achievement-api-call');
 });
+
+
 
 /*
 |--------------------------------------------------------------------------

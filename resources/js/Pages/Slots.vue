@@ -1,6 +1,10 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { Link } from '@inertiajs/vue3';
 
+function goToTragamonedas() {
+    window.location.href = '/tragamonedas';
+}
 /* -------------------------
    CATEGORÍAS
 -------------------------- */
@@ -17,12 +21,8 @@ const categories = [
 -------------------------- */
 const featuredGames = [
     { 
-        id: 1, 
-        name: 'Angeles & Ladders - Live Casino', 
-        subtitle: 'Prueba nuestro juego Snakes & Ladders en vivo',
-        image: '/images/slots/lines.png',
-        label: 'Promoción',
-        btnText: '¡Juega ya!'
+        image: '/images/slots/slots1.png',
+    
     },
 ];
 
@@ -63,13 +63,7 @@ const turboGames = [
                 :key="card.id"
                 class="featured-card"
                 :style="{ backgroundImage: `url(${card.image})` }"
-            >
-                <div class="featured-overlay">
-                    <span class="featured-label">{{ card.label }}</span>
-                    <h3 class="featured-title">{{ card.name }}</h3>
-                    <p class="featured-subtitle">{{ card.subtitle }}</p>
-                    <button class="featured-btn">{{ card.btnText }}</button>
-                </div>
+            >     
             </div>
         </div>
 
@@ -106,7 +100,7 @@ const turboGames = [
                     :key="game.id"
                     href="#"
                     class="game-item"
-                    @click.prevent="openWarning"
+                    @click.prevent="goToTragamonedas"
                 >
                     <div class="game-image-wrapper">
                         <img :src="game.image" :alt="game.name" class="game-img" />
@@ -117,27 +111,20 @@ const turboGames = [
                     <p class="game-title">{{ game.name }}</p>
                 </a>
             </div>
-        </section>
-
-        <!-- Sección: Juegos Turbo -->
-        <section class="game-section">
             <div class="section-header-row">
                 <h2 class="section-title">
-                    <i class="fas fa-bolt section-icon"></i>
-                    Juegos Turbo
+                    
+                    
                 </h2>
-                <button class="see-all-btn">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                
             </div>
-
             <div class="games-horizontal">
                 <a 
                     v-for="game in turboGames"
                     :key="game.id"
                     href="#"
                     class="game-item"
-                    @click.prevent="openWarning"
+                    @click.prevent="goToTragamonedas"
                 >
                     <div class="game-image-wrapper">
                         <img :src="game.image" :alt="game.name" class="game-img" />
@@ -148,8 +135,31 @@ const turboGames = [
                     <p class="game-title">{{ game.name }}</p>
                 </a>
             </div>
-        </section>
-        
+            <div class="section-header-row">
+                <h2 class="section-title">
+                    
+                    
+                </h2>
+                
+            </div>
+            <div class="games-horizontal">
+                <a 
+                    v-for="game in turboGames"
+                    :key="game.id"
+                    href="#"
+                    class="game-item"
+                    @click.prevent="goToTragamonedas"
+                >
+                    <div class="game-image-wrapper">
+                        <img :src="game.image" :alt="game.name" class="game-img" />
+                        <div class="game-hover-overlay">
+                            <button class="game-play-icon">▶</button>
+                        </div>
+                    </div>
+                    <p class="game-title">{{ game.name }}</p>
+                </a>
+            </div>
+        </section>     
             <!-- PIE DE PAGINA-->
             <footer class="footer-container">
                 <div class="footer-grid">

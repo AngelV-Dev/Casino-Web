@@ -113,37 +113,6 @@ const exclusiveGames = [
             </div>
         </div>
 
-        <!-- Sección: Slots -->
-        <section class="game-section">
-            <div class="section-header-row">
-                <h2 class="section-title">
-                    <i class="fas fa-fire section-icon"></i>
-                    Slots
-                </h2>
-                <button class="see-all-btn">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-
-            <div class="games-horizontal">
-                <a 
-                    v-for="game in slotsGames"
-                    :key="game.id"
-                    href="#"
-                    class="game-item"
-                    @click.prevent="openWarning"
-                >
-                    <div class="game-image-wrapper">
-                        <img :src="game.image" :alt="game.name" class="game-img" />
-                        <div class="game-hover-overlay">
-                            <button class="game-play-icon">▶</button>
-                        </div>
-                    </div>
-                    <p class="game-title">{{ game.name }}</p>
-                </a>
-            </div>
-        </section>
-
         <!-- Sección: Juegos Turbo -->
         <section class="game-section">
             <div class="section-header-row">
