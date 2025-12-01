@@ -1,5 +1,4 @@
 <?php
-
 /**
  * ==========================================
  * LÓGICA DE RUTAS WEB (Laravel + Inertia)
@@ -7,23 +6,24 @@
  * Aquí se definen todas las URLs accesibles desde el navegador.
  * Se conectan las rutas con los Controladores y se renderizan las Vistas (Vue).
  */
-
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Moderator\ModerationController;
 use App\Http\Controllers\Support\TicketController;
+use App\Http\Controllers\Admin\TicketManagementController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\CrashController;
-use App\Http\Controllers\AchievementController;
-use App\Http\Controllers\Admin\GameController; 
+use App\Http\Controllers\AchievementController; 
 use App\Http\Controllers\DiceGameController;
 use App\Http\Controllers\SlotGameController; // Importado de la nueva versión
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\HighFlyerController;
-use Illuminate\Support\Facades\Auth; // Añadido para las funciones anónimas
+use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Games\CrocodileTeethController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth; // Añadido para las funciones anónimas
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HighFlyerController;
+use Inertia\Inertia;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -61,17 +61,23 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->group(function
 });
 
 // 2. ZONA ADMIN & SUPER ADMIN (Gestión de usuarios común)
-Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(function () {
-    Route::get('/users', [UserManagementController::class, 'index']);             // Listar usuarios
-    Route::post('/users', [UserManagementController::class, 'store']);            // Crear usuario manual
-    Route::put('/users/{user}', [UserManagementController::class, 'update']);     // Editar usuario
-    Route::delete('/users/{user}', [UserManagementController::class, 'destroy']); // Eliminar usuario
-    
-    // Acciones críticas sobre usuarios
-    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole']); // Cambiar rol
-    Route::put('/users/{user}/suspend', [UserManagementController::class, 'suspend']); // Suspender temporalmente
-    Route::put('/users/{user}/ban', [UserManagementController::class, 'ban']);         // Banear permanentemente
-});
+Route::middleware(['auth', 'role:super_admin,admin'])
+    ->prefix('admin/users')        // Prefijo URL: /admin/users/...
+    ->name('admin.users.')         // Prefijo Nombre: admin.users.index, admin.users.update, etc.
+    ->group(function () {
+        
+        // CRUD Básico (Index, Store, Update, Destroy)
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
+
+        // Acciones críticas adicionales
+        Route::put('/{user}/role', [UserManagementController::class, 'updateRole'])->name('update-role');
+        Route::put('/{user}/suspend', [UserManagementController::class, 'suspend'])->name('suspend');
+        Route::put('/{user}/activate', [UserManagementController::class, 'activate'])->name('activate'); // Agregué esta que usas en Vue
+        Route::put('/{user}/ban', [UserManagementController::class, 'ban'])->name('ban');
+    });
 
 // 3. ZONA MODERADORES (Control de contenido y comportamiento)
 Route::middleware(['auth', 'role:moderator,admin,super_admin'])->prefix('moderator')->group(function () {
@@ -89,6 +95,29 @@ Route::middleware(['auth', 'role:support,moderator,admin,super_admin'])->prefix(
     Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply']);     // Responder
     Route::put('/tickets/{ticket}/close', [TicketController::class, 'close']);      // Cerrar ticket resuelto
 });
+
+// ==================== TICKETS (USUARIOS) ====================
+Route::middleware(['auth'])->prefix('tickets')->name('tickets.')->group(function () {
+    Route::get('/', [TicketController::class, 'index'])->name('index');
+    Route::post('/', [TicketController::class, 'store'])->name('store');
+    Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
+    Route::post('/{ticket}/reply', [TicketController::class, 'reply'])->name('reply');
+    Route::put('/{ticket}/close', [TicketController::class, 'close'])->name('close');
+});
+
+// ==================== TICKETS (STAFF) ====================
+Route::middleware(['auth', 'role:super_admin,admin,moderator,support'])
+    ->prefix('admin/tickets')
+    ->name('admin.tickets.')
+    ->group(function () {
+        Route::get('/', [TicketManagementController::class, 'index'])->name('index');
+        Route::get('/statistics', [TicketManagementController::class, 'statistics'])->name('statistics');
+        Route::get('/{ticket}', [TicketManagementController::class, 'show'])->name('show');
+        Route::post('/{ticket}/reply', [TicketManagementController::class, 'reply'])->name('reply');
+        Route::put('/{ticket}/status', [TicketManagementController::class, 'updateStatus'])->name('update-status');
+        Route::delete('/{ticket}', [TicketManagementController::class, 'destroy'])->name('destroy');
+});
+
 
 // ========== EJEMPLO CON PERMISOS ESPECÍFICOS ==========
 Route::middleware(['auth', 'permission:manage_users'])->group(function () {

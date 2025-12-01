@@ -6,6 +6,7 @@ import DropdownLink from '@/components/DropdownLink.vue';
 import NavLink from '@/components/NavLink.vue';
 import ResponsiveNavLink from '@/components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import FloatingButtons from '@/components/FloatingButtons.vue';
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -194,5 +195,6 @@ const showingNavigationDropdown = ref(false);
                 <slot />
             </main>
         </div>
+        <FloatingButtons />
     </div>
 </template>

@@ -288,6 +288,18 @@ class User extends Authenticatable
         ]);
     }
 
+// ===== Ticket =====
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function ticketReplies()
+    {
+        return $this->hasMany(TicketReply::class);
+    }
+
     // ==================== AVATAR ====================
 
     public function getAvatarUrlAttribute()
