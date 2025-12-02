@@ -8,6 +8,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/components/PrimaryButton.vue';
 // Nota: Asegúrate de que la carpeta coincida con tu sistema (Components vs components)
 import Checkbox from '@/components/Checkbox.vue'; 
+// --- LÓGICA DEL MODAL DE BANEO ---
+import { usePage } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
+// ==========================================
 
 // Definimos si recibimos propiedades externas (como status de sesión o permisos de resetear)
 defineProps({
@@ -33,6 +37,24 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+// ==============Modal Baneo============================
+const page = usePage();
+const showBanModal = ref(false);
+const banData = ref({});
+
+onMounted(() => {
+    if (page.props.flash?.ban_info) {
+        banData.value = page.props.flash.ban_info;
+        showBanModal.value = true;
+    }
+});
+
+const closeModal = () => {
+    showBanModal.value = false;
+};
+// ==========================================
+
 </script>
 
 <template>
@@ -199,6 +221,53 @@ const submit = () => {
 
             </form>
         </div>
+        <!-- ========================================== -->
+        <!--        MODAL DE BANEO / SUSPENSIÓN         -->
+        <!-- ========================================== -->
+        <div v-if="showBanModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md transition-opacity">
+            <div class="bg-[#1a1d1a] border border-gray-700 rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
+                
+                <!-- Encabezado -->
+                <div :class="['p-6 text-center text-white relative overflow-hidden', banData.type === 'banned' ? 'bg-red-900/50' : 'bg-yellow-600/50']">
+                    <!-- Efecto de brillo de fondo -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                    
+                    <div class="relative z-10 mx-auto w-16 h-16 bg-black/30 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                        <!-- Icono Baneo -->
+                        <svg v-if="banData.type === 'banned'" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        <!-- Icono Suspensión -->
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="relative z-10 text-2xl font-bold uppercase tracking-widest text-white drop-shadow-md">
+                        {{ banData.title }}
+                    </h2>
+                </div>
+
+                <!-- Cuerpo -->
+                <div class="p-8 text-center">
+                    <p class="text-gray-300 mb-6 text-lg leading-relaxed">
+                        {{ banData.message }}
+                    </p>
+
+                    <!-- Caja de Razón -->
+                    <div class="bg-black/40 p-4 rounded-lg border border-gray-700 mb-8 text-left">
+                        <p class="text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">Razón Oficial:</p>
+                        <p class="text-white font-medium italic">"{{ banData.reason }}"</p>
+                    </div>
+
+                    <button 
+                        @click="closeModal"
+                        class="w-full py-3 px-4 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white font-bold rounded-full transition shadow-lg border border-gray-600 uppercase tracking-wide text-sm"
+                    >
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 <!-- 
@@ -208,6 +277,6 @@ const submit = () => {
          _/\/\/\_/ /
        _|         /
      _|   ( |  ( |
-    /__.-'|_|--|_| Tovar
+    /__.-'|_|--|_| ITovar
  ==========================================
 -->

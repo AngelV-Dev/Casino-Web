@@ -11,17 +11,27 @@ class CheckUserStatus
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
-
-        if ($user && !$user->isActive()) {
+        // Revisamos si hay usuario y si NO está activo
+        if (Auth::check() && !Auth::user()->isActive()) {
+            $user = Auth::user();
+            
+            // 1. Cerrar sesión
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             
-            $message = $user->isSuspended() 
-                ? 'Tu cuenta ha sido suspendida. Razón: ' . $user->suspension_reason
-                : 'Tu cuenta ha sido baneada permanentemente.';
+            // 2. Preparar los datos para el Modal (ESTO ES LO NUEVO)
+            $banInfo = [
+                'type' => $user->status, // 'banned' o 'suspended'
+                'title' => $user->status === 'banned' ? '⛔ CUENTA BANEADA' : '⏳ CUENTA SUSPENDIDA',
+                'message' => $user->status === 'banned' 
+                    ? 'Tu cuenta ha sido suspendida permanentemente.' 
+                    : 'Tu acceso ha sido restringido temporalmente.',
+                'reason' => $user->suspension_reason ?? 'Sin motivo especificado',
+            ];
             
-            return redirect()->route('login')
-                ->with('error', $message);
+            // 3. Redirigir enviando 'ban_info'
+            return redirect()->route('login')->with('ban_info', $banInfo);
         }
 
         return $next($request);

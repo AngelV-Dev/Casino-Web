@@ -16,11 +16,18 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // registrar aliases de middleware
+        // --- REGISTRO DE ALIASES (CORREGIDO) ---
         $middleware->alias([
+            // Este es el guardia de roles (Para Admin/Moderator)
+            // Asegúrate de que el archivo en App/Http/Middleware se llame RoleMiddleware.php
             'role' => \App\Http\Middleware\CheckRole::class,
+
+            // Este es el guardia de baneo (Para sacar a usuarios suspendidos)
+            // Apuntamos a tu archivo existente CheckUserStatus.php
+            'banned' => \App\Http\Middleware\CheckUserStatus::class, 
+            
+            // (Opcional) Si usas permisos puntuales
             'permission' => \App\Http\Middleware\CheckPermission::class,
-            'check.status' => \App\Http\Middleware\CheckUserStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
