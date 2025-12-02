@@ -98,10 +98,15 @@ class UserManagementController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        // 🔒 SEGURIDAD: Si el usuario objetivo es Super Admin y yo NO soy Super Admin...
+        if ($user->role === 'super_admin' && $request->user()->role !== 'super_admin') {
+            return redirect()->back()->with('error', 'No tienes permiso para editar al Super Admin.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'password' => ['nullable', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
         ]);
 
         $user->update([

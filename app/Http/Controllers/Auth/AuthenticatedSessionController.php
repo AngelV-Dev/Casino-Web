@@ -36,12 +36,7 @@ class AuthenticatedSessionController extends Controller
         // Redirección según rol
         $user = Auth::user();
 
-        return match ($user->role) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'moderator' => redirect()->route('moderator.dashboard'),
-            'support' => redirect()->route('support.dashboard'),
-            default => redirect()->route('dashboard'),
-        };
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

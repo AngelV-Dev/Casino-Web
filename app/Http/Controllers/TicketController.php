@@ -1,8 +1,4 @@
 <?php
-// ============================================================
-// ARCHIVO 1: app/Http/Controllers/TicketController.php
-// (Para usuarios normales)
-// ============================================================
 
 namespace App\Http\Controllers;
 
@@ -10,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\TicketReply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // <--- IMPORTANTE: Agregado para transacciones
 use Inertia\Inertia;
 
 class TicketController extends Controller
@@ -34,31 +31,52 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'subject' => 'required|string|max:255',
-            'message' => 'required|string|max:2000',
-        ]);
+        // Bloque de seguridad para atrapar el error
+        try {
+            $request->validate([
+                'subject' => 'required|string|max:255',
+                'message' => 'required|string|max:2000',
+            ]);
 
-        $ticket = Ticket::create([
-            'user_id' => Auth::id(),
-            'subject' => $request->subject,
-            'message' => $request->message,
-            'status' => 'open',
-        ]);
+            return DB::transaction(function () use ($request) {
+                // 1. Crear Ticket
+                $ticket = Ticket::create([
+                    'user_id' => Auth::id(),
+                    'subject' => $request->subject,
+                    'message' => $request->message,
+                    'status' => 'open',
+                ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Ticket creado exitosamente',
-            'ticket' => $ticket->load(['replies.user']),
-        ], 201);
+                // 2. Crear Respuesta
+                TicketReply::create([
+                    'ticket_id' => $ticket->id,
+                    'user_id' => Auth::id(),
+                    'message' => $request->message,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Ticket creado exitosamente',
+                    'ticket' => $ticket->load(['replies.user']),
+                ], 201);
+            });
+
+        } catch (\Exception $e) {
+            // AQUÍ ESTÁ EL TRUCO: Devolvemos el error exacto como JSON
+            return response()->json([
+                'success' => false,
+                'error_real' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea' => $e->getLine()
+            ], 500); // Mantenemos 500 para que salga rojo, pero con mensaje legible
+        }
     }
-
     /**
      * Ver un ticket específico
      */
     public function show(Ticket $ticket)
     {
-        // Verificar que el usuario sea dueño del ticket o tenga permisos
+        // Verificar permisos
         if ($ticket->user_id !== Auth::id() && !Auth::user()->hasAnyRole(['super_admin', 'admin', 'moderator', 'support'])) {
             abort(403, 'No tienes permiso para ver este ticket');
         }
@@ -69,11 +87,11 @@ class TicketController extends Controller
     }
 
     /**
-     * Responder a un ticket (usuario puede responder a su propio ticket)
+     * Responder a un ticket
      */
     public function reply(Request $request, Ticket $ticket)
     {
-        // Verificar que el usuario sea dueño del ticket o tenga permisos
+        // Verificar permisos
         if ($ticket->user_id !== Auth::id() && !Auth::user()->hasAnyRole(['super_admin', 'admin', 'moderator', 'support'])) {
             abort(403, 'No tienes permiso para responder a este ticket');
         }
@@ -88,7 +106,7 @@ class TicketController extends Controller
             'message' => $request->message,
         ]);
 
-        // Si el ticket estaba cerrado, reabrirlo
+        // Si estaba cerrado, lo reabrimos
         if ($ticket->isClosed()) {
             $ticket->reopen();
         }
@@ -101,7 +119,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Cerrar ticket (solo el dueño puede cerrar)
+     * Cerrar ticket
      */
     public function close(Ticket $ticket)
     {
