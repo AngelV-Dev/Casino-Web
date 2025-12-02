@@ -203,13 +203,21 @@ const resetGame = () => {
                     <p class="text-light-emphasis">Vuela alto, retira a tiempo</p>
                 </div>
 
-                <!-- BALANCE -->
-                <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded bg-opacity-10 bg-white">
-                    <div>
-                        <small class="text-light-emphasis">BALANCE</small>
-                        <h3 class="mb-0 text-success">S/ {{ typeof balance === 'number' ? balance.toFixed(2) : '0.00' }}</h3>
-                    </div>
-                </div>
+                            <!-- BALANCE CON VIDA -->
+<div class="balance-container">
+    <div class="balance-content">
+        <div class="balance-info">
+            <div class="balance-label">MI SALDO</div>
+            <div class="balance-amount" :class="{ 'balance-updated': balanceGlowing }">
+                S/ {{ typeof balance === 'number' ? balance.toFixed(2) : '0.00' }}
+            </div>
+        </div>
+        
+        <div class="balance-badge">
+            💳 DISPONIBLE
+        </div>
+    </div>
+</div>
 
                 <!-- MULTIPLIER -->
                 <div class="multiplier-display text-center">
@@ -269,6 +277,8 @@ const resetGame = () => {
                         </button>
                     </div>
                 </div>
+
+
 
                 <!-- HISTORY -->
                 <div class="history">
@@ -469,5 +479,343 @@ body {
     color: white !important;
     border-color: var(--primary);
     box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+/* 🔥 HISTORIAL MEJORADO */
+.history {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 25px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.history h6 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.history h6:before {
+    content: "📊";
+    font-size: 1.3rem;
+}
+
+.history-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.history-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.history-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary), #7c3aed);
+    border-radius: 10px;
+}
+
+.history-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #94a3b8;
+}
+
+.history-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.history-empty p {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.history-entry {
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border-left: 5px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeIn 0.4s ease;
+}
+
+.history-entry:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.history-entry.crash {
+    border-left-color: var(--danger);
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
+}
+
+.history-entry.win {
+    border-left-color: var(--success);
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+}
+
+.history-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.history-value {
+    flex: 1;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.history-time {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🔥 BOTONES MEJORADOS - Más llamativos */
+.btn-glow {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed, #8b5cf6);
+    border: none;
+    border-radius: 14px;
+    padding: 18px 0;
+    font-weight: 700;
+    color: white;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-glow:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.6);
+}
+
+.btn-glow:not(:disabled):active {
+    transform: translateY(-1px);
+}
+
+.btn-glow:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn-glow:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn-glow:not(:disabled):hover:before {
+    left: 100%;
+}
+
+.btn-cashout {
+    background: linear-gradient(135deg, #f59e0b, #f97316, #fb923c);
+    border: none;
+    border-radius: 14px;
+    padding: 18px 0;
+    font-weight: 700;
+    color: white;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-cashout:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.6);
+}
+
+.btn-cashout:not(:disabled):active {
+    transform: translateY(-1px);
+}
+
+.btn-cashout:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn-cashout:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn-cashout:not(:disabled):hover:before {
+    left: 100%;
+}
+
+/* 🔥 Efecto para cuando está volando */
+.is-flying {
+    animation: pulse-glow 1.5s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+    100% { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.7); }
+}
+
+/* 🔥 BALANCE CON VIDA (simple) */
+.balance-container {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 18px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 2px solid #8b5cf6;
+    box-shadow: 
+        0 10px 25px rgba(139, 92, 246, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.balance-container::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        #8b5cf6, #06b6d4, #10b981, #8b5cf6
+    );
+    background-size: 400% 400%;
+    border-radius: 20px;
+    z-index: -1;
+    animation: border-glow 3s ease infinite;
+}
+
+.balance-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.balance-label {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.balance-label::before {
+    content: "💰";
+    font-size: 1.2rem;
+    animation: coin-bounce 2s infinite;
+}
+
+.balance-amount {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #10b981;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.balance-amount:hover {
+    color: #06b6d4;
+    text-shadow: 0 0 15px rgba(6, 182, 212, 0.7);
+}
+
+.balance-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 700;
+    color: #10b981;
+    transition: all 0.3s ease;
+}
+
+.balance-badge:hover {
+    background: rgba(16, 185, 129, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+/* 🔥 ANIMACIONES SUAVES */
+@keyframes border-glow {
+    0%, 100% {
+        background-position: 0% 50%;
+        opacity: 0.5;
+    }
+    50% {
+        background-position: 100% 50%;
+        opacity: 0.8;
+    }
+}
+
+@keyframes coin-bounce {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-5px) rotate(10deg);
+    }
+}
+
+/* 🔥 EFECTO AL ACTUALIZAR BALANCE */
+.balance-updated {
+    animation: balance-update 0.5s ease;
+}
+
+@keyframes balance-update {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        color: #fbbf24;
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 </style>
